@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 
 import nu.xdi.graphics.util.Images;
 
@@ -38,11 +39,11 @@ public class Game {
 	private static BufferedImage[] image;
 	
 	private static BufferedImage shotExplosion;
-	private static BufferedImage invExplosion;
+	static BufferedImage invExplosion;
+	private static BufferedImage cheekySprite;
 	private static BufferedImage base;
-	private static BufferedImage baseShot;
-	private static BufferedImage shield;
 	private static BufferedImage missileHit;
+	public static BufferedImage shield;
 	
 	private static BufferedImage saucer;
 	private static BufferedImage saucerExplosion;
@@ -57,6 +58,8 @@ public class Game {
 	private static int currentMissile;
 	private static int[] missileX = new int[3];
 	private static int[] missileY = new int[3];
+	private static int[] missileF = new int[3];
+	private static int[] missileExplode = new int[3];
 	
 	
 	/**
@@ -77,17 +80,16 @@ public class Game {
 		image = new BufferedImage[] { row1Sprite, row2Sprite, row2Sprite, row4Sprite, row4Sprite };
 		
 		invExplosion = spriteSheet.getSubimage(0, 16, 16, 8);
-		base = spriteSheet.getSubimage(48, 0, 16, 24);
-		baseShot = spriteSheet.getSubimage(104, 0, 8, 8);
-		shield = spriteSheet.getSubimage(64, 0, 24, 16);
-		missileHit = spriteSheet.getSubimage(64, 16, 8, 8);
+		cheekySprite = spriteSheet.getSubimage(16, 16, 32, 8);
+		base = spriteSheet.getSubimage(0, 24, 48, 8);
+		shield = spriteSheet.getSubimage(48, 0, 24, 16);
 		
-		shotExplosion = spriteSheet.getSubimage(64, 16, 8, 8);
-		saucer = spriteSheet.getSubimage(72, 16, 16, 8);
-		saucerExplosion = spriteSheet.getSubimage(64, 24, 24, 8);
-		missiles = new BufferedImage[] { spriteSheet.getSubimage(88, 0, 8, 32),
-										spriteSheet.getSubimage(96, 0, 8, 32),
-										spriteSheet.getSubimage(104, 0, 8, 32)
+		shotExplosion = spriteSheet.getSubimage(48, 24, 8, 8);
+		saucer = spriteSheet.getSubimage(56, 24, 16, 8);
+		saucerExplosion = spriteSheet.getSubimage(48, 16, 24, 8);
+		missiles = new BufferedImage[] { spriteSheet.getSubimage(72, 0, 8, 32),
+										spriteSheet.getSubimage(80, 0, 8, 32),
+										spriteSheet.getSubimage(88, 0, 8, 32)
 		};
 
 		baseX = 240;
@@ -103,8 +105,12 @@ public class Game {
 
 		shotX = -1;
 		baseX = 36;
-		for (int i : missileX) i = -1;
-		for (int i : missileY) i = 0;
+		for (int i = 0; i < missileX.length; ++i) {
+			missileX[i] = -1;
+			missileY[i] = 0;
+			missileF[i] = 0;
+			missileExplode[i] = 0;
+		}
 		currentMissile = 0;
 		
 		for (int i = 0; i < 5; ++i) {
@@ -113,6 +119,9 @@ public class Game {
 			}
 		}
 		Game.setDirection(1);
+		
+		Window.drawPlayArea();
+		
 		gameRunning = true;
 	}
 	
@@ -122,61 +131,141 @@ public class Game {
 	 * @param graphics context of drawable area
 	 */
 	public static void update(Graphics g) {
-
 		
 		if (gameRunning) {
 
 			// Draw player base
 			g.drawImage(base.getSubimage(0, 0, 16, 8), baseX, 432, 32, 16, null);
 
-			// Draw the shields
-			g.drawImage(shield, 64, 384, 48, 32, null);
-			g.drawImage(shield, 154, 384, 48, 32, null);
-			g.drawImage(shield, 244, 384, 48, 32, null);
-			g.drawImage(shield, 334, 384, 48, 32, null);
-			
-			// Draw the line at the bottom
-			g.setColor(Color.GREEN);
-			g.fillRect(0, 478, 446, 2);
-			
 			// If player's shot is active (x is positive) then redraw it
 			if (shotX >= 0) {
 				if (shotExplode > 0) {
 					g.drawImage(shotExplosion, shotX, shotY, 16, 16, null);
-					if (--shotExplode == 0) shotX = -2;					// Set to -2. See movement() further down
+					if (--shotExplode == 0) {
+						g.setXORMode(Color.BLACK);
+						g.drawImage(shotExplosion, shotX, shotY, 16, 16, null);
+						g.setPaintMode();
+						shotX = -2;					// Set to -2. See movement() further down
+					}
 				} else {
-					g.fillRect(shotX + 6, shotY, 2, 8);
+					// Erase old shot
+					g.setColor(Color.BLACK);
+					g.clearRect(shotX + 6, shotY, 2, 8);
 					shotY -= 8;
-					if (shotY <= 65) shotExplode = 8;
+					// Test if it's reached the top of the screen or can be redrawn in new position
+					if (shotY <= 64) {
+						shotExplode = 8;
+					} else {
+						g.setColor(Color.WHITE);
+						g.fillRect(shotX + 6, shotY, 2, 8);
+					}
 				}
 			}
 			
-			// Is the current invader missile active?
-			if (missileX[currentMissile] > 0) {
-				
-				missileY[currentMissile] += 8;
-				
-				currentMissile++;
-				if (currentMissile ==3) currentMissile = 0;
-			}
-			
-			Text.print(g, 16, 16, "SCORE<1> HI-SCORE SCORE<2>");
-			Text.print(g, 48, 48, "0000    0000");
-			Text.print(g, 16, 480, "3");
-			Text.print(g, 280, 480, "CREDIT 00");
-
-			for (Invader inv : invaders) {
-				inv.redraw(g);
-			}
-			
 			/*
-			 * Step from left to right across the current row of invaders
-			 * moving up one row if the end is reached
+			 * Invader missile handler
 			 */
-			while (true) {
-				Invader currentInv = invaders[currentRow * 11 + currentCol]; 
+			if (missileX[currentMissile] > 0) {
+
+				
+				// If missile active, perform its actions
+				if (missileExplode[currentMissile] <= 0) {
+					
+					// Remove it from the screen
+					if (missileExplode[currentMissile] == 0) {
+						g.drawImage(missiles[currentMissile].getSubimage(0, missileF[currentMissile] * 8, 8, 8), missileX[currentMissile], missileY[currentMissile], 16, 16, null);
+						g.setXORMode(Color.BLACK);
+						g.drawImage(missiles[currentMissile].getSubimage(0, missileF[currentMissile] * 8, 8, 8), missileX[currentMissile], missileY[currentMissile], 16, 16, null);
+						g.setPaintMode();
+					} else {
+						missileExplode[currentMissile] = 0;
+					}
+
+					// Advance to the next frame of animation
+					if (++missileF[currentMissile] == 4) missileF[currentMissile] = 0;
+
+					// Move missile down and draw it
+					missileY[currentMissile] += 8;
+					if (missileY[currentMissile] > 457) {
+						missileExplode[currentMissile] = 8;
+					} else {
+						g.drawImage(missiles[currentMissile].getSubimage(0, missileF[currentMissile] * 8, 8, 8), missileX[currentMissile], missileY[currentMissile], 16, 16, null);
+					}
+				// Make it explode
+				} else if (missileExplode[currentMissile] == 8) {
+					g.drawImage(shotExplosion, missileX[currentMissile], missileY[currentMissile], 16, 16, null);
+					missileExplode[currentMissile]--;
+					System.out.println(missileExplode[currentMissile]);
+				// Remove from screen and mark it for reuse
+				} else if (--missileExplode[currentMissile] == 0) {
+					System.out.println(missileExplode[currentMissile]);
+					g.drawImage(shotExplosion, missileX[currentMissile], missileY[currentMissile], 16, 16, null);
+					g.setXORMode(Color.BLACK);
+					g.drawImage(shotExplosion, missileX[currentMissile], missileY[currentMissile], 16, 16, null);
+					g.setPaintMode();
+					missileX[currentMissile] = -1;
+				}
+			}
+			
+			// Move to the next missile slot
+			if (++currentMissile == 3) currentMissile = 0;
+			
+			Text.print(g, 48, 48, "0000");
+			Text.print(g, 176, 48, "0000");
+			Text.print(g, 336, 48, "0000");
+			Text.print(g, 16, 480, "3");
+			Text.print(g, 392, 480, "00");
+
+			marchInvaders(g);
+		}
+	}
+
+
+	/**
+	 * Step from left to right across the current row of invaders
+	 * moving up one row if the end is reached
+	 */
+	public static void marchInvaders(Graphics g) {
+		int i;
+		
+		while (true) {
+			Invader currentInv = invaders[currentRow * 11 + currentCol];
+			if (currentInv.getType() > 0) {
+				currentInv.testExplode(shotX, shotY);
 				currentInv.moveAcross();
-				if (moveDown) currentInv.moveDown();
+				if (moveDown) {
+					currentInv.undraw(g);
+					currentInv.moveDown();
+				}
+				currentInv.redraw(g);
+				if (currentInv.getExplode() > 0) break;
+
+				// Give the current invader a chance to fire
+				if (new Random().nextInt(100) > 92) {
+					// Scan down to make sure it isn't above another invader
+					for (i = currentRow; i <= 4; ++i)  {
+						if (i == 4) break;
+						if (invaders[(i + 1) * 11 + currentCol].getType() > 0) {
+							break;
+						}
+					}
+					// if i == 4 then all clear. Use the next free missile slot if one available
+					if (i == 4) {
+						for (i = 0; i < 3; ++i) {
+							System.out.print(missileX[i] + " ");
+							if (missileX[i] < 0) {
+								missileX[i] = currentInv.getX() + 15;
+								missileY[i] = currentInv.getY() + 8;
+								missileExplode[i] = -1;
+								System.out.println("Shots fired!");
+								break;
+							} else {
+								System.out.println("No missile slots");
+							}
+						}
+					}
+				}
+
 				currentCol++;
 				if (currentCol > 10) {
 					currentCol = 0;
@@ -200,20 +289,11 @@ public class Game {
 						}
 					}
 				}
-				/*
-				 * If the invader just processed was active, let the game run for another cycle
-				 * This way, only one invader gets updated per cycle, but inactive slots are passed
-				 * over. This emulates the behaviour of the game speeding up as invaders get
-				 * destroyed.
-				 */
-				if (currentInv.getType() > 0) {
-					// Randomly decide if this invader wants to fire
-					
-					break;
-				}
-			}
+				break;
+			} // end of active invader's activity
 		}
 	}
+
 
 	/**
 	 * Update movement of the player and their projectile (if active)
@@ -223,14 +303,14 @@ public class Game {
 	public static void movement(Container window) {
 
 		if (Controls.getLeft() && baseX > 36) baseX-= 2;								// LEFT
-		if (Controls.getRight() && baseX < 380) baseX += 2;		// RIGHT
+		if (Controls.getRight() && baseX < 372) baseX += 2;		// RIGHT
 		// Fire key has to be released before another shot can be fired.
 		if (!Controls.getFire() && shotX == -2) {
 			shotX = -1;
 		}
 		if (Controls.getFire() && shotX == -1) {
 			shotX = baseX + 10	;
-			shotY = 424;
+			shotY = 432;
 		}
 	}
 
