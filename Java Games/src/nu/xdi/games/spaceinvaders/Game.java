@@ -18,6 +18,7 @@ import nu.xdi.graphics.util.*;
 public class Game {
 	private static int baseX = 240;
 	private static int shotX, shotY;
+	private static int shotExplode = 0;
 	private static int saucerX;
 	private static int playerShotCount;
 	
@@ -36,15 +37,27 @@ public class Game {
 	private static BufferedImage row1Sprite;
 	private static BufferedImage[] image;
 	
-	private static BufferedImage invExplode;
+	private static BufferedImage shotExplosion;
+	private static BufferedImage invExplosion;
 	private static BufferedImage base;
 	private static BufferedImage baseShot;
 	private static BufferedImage shield;
 	private static BufferedImage missileHit;
 	
 	private static BufferedImage saucer;
-	private static BufferedImage saucerExplode;
+	private static BufferedImage saucerExplosion;
+
+	/* 
+	 * Invaders can have up to three missiles in play
+	 * One of them gets updated per frame. currentMissile is used to keep
+	 * track of which one will be updated in the current frame and it constantly
+	 * loops around to 0
+	 */
 	private static BufferedImage[] missiles;
+	private static int currentMissile;
+	private static int[] missileX = { -1, -1, -1 };
+	private static int[] missileY = { 0, 0, 0 };
+	
 	
 	/**
 	 * Start the game by resetting the score and initialising a new array of invaders
@@ -63,19 +76,24 @@ public class Game {
 		row1Sprite = spriteSheet.getSubimage(32, 0, 16, 16);
 		image = new BufferedImage[] { row1Sprite, row2Sprite, row2Sprite, row4Sprite, row4Sprite };
 		
-		invExplode = spriteSheet.getSubimage(0, 16, 16, 8);
+		invExplosion = spriteSheet.getSubimage(0, 16, 16, 8);
 		base = spriteSheet.getSubimage(48, 0, 16, 24);
 		baseShot = spriteSheet.getSubimage(104, 0, 8, 8);
 		shield = spriteSheet.getSubimage(64, 0, 24, 16);
 		missileHit = spriteSheet.getSubimage(64, 16, 8, 8);
 		
+		shotExplosion = spriteSheet.getSubimage(64, 16, 8, 8);
 		saucer = spriteSheet.getSubimage(72, 16, 16, 8);
-		saucerExplode = spriteSheet.getSubimage(64, 24, 24, 8);
+		saucerExplosion = spriteSheet.getSubimage(64, 24, 24, 8);
 		missiles = new BufferedImage[] { spriteSheet.getSubimage(88, 0, 8, 32),
 										spriteSheet.getSubimage(96, 0, 8, 32),
 										spriteSheet.getSubimage(104, 0, 8, 32)
 		};
+		currentMissile = 0;
 		
+		
+		shotX = -1;
+		baseX = 36;
 		
 		for (int i = 0; i < 5; ++i) {
 			for (int j = 0; j < 11; ++j) {
@@ -108,6 +126,27 @@ public class Game {
 			// Draw the line at the bottom
 			g.setColor(Color.GREEN);
 			g.fillRect(0, 478, 446, 2);
+			
+			// If player's shot is active (x is positive) then redraw it
+			if (shotX >= 0) {
+				if (shotExplode > 0) {
+					g.drawImage(shotExplosion, shotX, shotY, 16, 16, null);
+					if (--shotExplode == 0) shotX = -2;					// Set to -2. See movement() further down
+				} else {
+					g.fillRect(shotX + 6, shotY, 2, 8);
+					shotY -= 8;
+					if (shotY <= 65) shotExplode = 8;
+				}
+			}
+			
+			// Is the current invader missile active?
+			if (missileX[currentMissile] > 0) {
+				
+				missileY[currentMissile] += 8;
+				
+				currentMissile++;
+				if (currentMissile ==3) currentMissile = 0;
+			}
 			
 			Text.print(g, 16, 16, "SCORE<1> HI-SCORE SCORE<2>");
 			Text.print(g, 48, 48, "0000    0000");
@@ -163,14 +202,22 @@ public class Game {
 	}
 
 	/**
-	 * Update movement of the player and invaders
+	 * Update movement of the player and their projectile (if active)
 	 * 
 	 * @param window that contains the game
 	 */
 	public static void movement(Container window) {
 
-		if (Controls.getLeft() && baseX > 0) baseX-= 2;								// LEFT
-		if (Controls.getRight() && baseX < window.getWidth() - 32) baseX += 2;		// RIGHT
+		if (Controls.getLeft() && baseX > 36) baseX-= 2;								// LEFT
+		if (Controls.getRight() && baseX < 380) baseX += 2;		// RIGHT
+		// Fire key has to be released before another shot can be fired.
+		if (!Controls.getFire() && shotX == -2) {
+			shotX = -1;
+		}
+		if (Controls.getFire() && shotX == -1) {
+			shotX = baseX + 10	;
+			shotY = 424;
+		}
 	}
 
 	
@@ -187,6 +234,11 @@ public class Game {
 		direction = newDirection;
 	}
 
+	/**
+	 * Sets the changeDirection flag
+	 * This tells the game that before going around do move all the invaders again it should
+	 * check to see if the direction is to be changed.
+	 */
 	public static void changeDirection() {
 		changeDirection = true;
 	}
@@ -194,6 +246,11 @@ public class Game {
 	public static boolean getChangeDirection() {
 		return changeDirection;
 	}
+	/**
+	 * This returns the status of the moveDown flag. This is set at the end of a full movement update
+	 * if the changeDirection flag is set.
+	 * @return
+	 */
 	public static boolean getMoveDown() {
 		return moveDown;
 	}
