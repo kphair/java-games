@@ -66,9 +66,10 @@ public class Text {
 					case '<': printChar(g, x, y, 36); break;
 					case '>': printChar(g, x, y, 37); break;
 					case '?': printChar(g, x, y, 38); break;
-					case '=': printChar(g, x, y, 39); break;
-					case '*': printChar(g, x, y, 40); break;
-					case '~': printChar(g, x, y, 41); break;
+					case '-': printChar(g, x, y, 39); break;
+					case '=': printChar(g, x, y, 40); break;
+					case '*': printChar(g, x, y, 41); break;
+					case 'y': printChar(g, x, y, 42); break;
 				}
 				x += 16;
 			}
