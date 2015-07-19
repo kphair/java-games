@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -26,6 +27,7 @@ public class Window extends JComponent implements ActionListener {
 	private String title;
 	private int width, height;
 	private JFrame window;
+	private BufferedImage playArea;
 	
 	public Window (String title, int width, int height) {
 		this.title = title;
@@ -40,6 +42,13 @@ public class Window extends JComponent implements ActionListener {
 		window.setResizable(false);
 		window.setVisible(true);	
 
+		/*
+		 *  Create a framebuffer for use by the game instead of having to redraw the whole
+		 *  window each time
+		 */
+		
+		playArea = new BufferedImage(window.getContentPane().getWidth(), window.getContentPane().getHeight(), BufferedImage.TYPE_INT_RGB);
+		
 		/* Attach the keyboard event handlers that are in Game.java
 		 */
 		window.addKeyListener(new KeyAdapter() {
@@ -82,10 +91,10 @@ public class Window extends JComponent implements ActionListener {
 		// Update the dimensions of our graphics area in case it was resized 
 		width = window.getContentPane().getWidth();
 		height = window.getContentPane().getHeight();
-
+		Game.update(playArea.getGraphics());
 		// Clear the background
-		g.setColor(Color.BLACK);
-		g.fillRect(0, 0, width, height);
+		// g.setColor(Color.BLACK);
+		// g.fillRect(0, 0, width, height);
 	}
 
 	/**
@@ -95,7 +104,9 @@ public class Window extends JComponent implements ActionListener {
 	 * @param graphics context for the JComponent that needs children repainted
 	 */
 	protected void paintChildren(Graphics g) {
-		Game.update(g);
+		g.drawImage(playArea, 0, 0, width, height, null);
+		
+		// Game.update(g);
 	}
 
 }

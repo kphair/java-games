@@ -5,7 +5,7 @@ import java.awt.Container;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-import nu.xdi.graphics.util.*;
+import nu.xdi.graphics.util.Images;
 
 /**
  * Game function code
@@ -55,8 +55,8 @@ public class Game {
 	 */
 	private static BufferedImage[] missiles;
 	private static int currentMissile;
-	private static int[] missileX = { -1, -1, -1 };
-	private static int[] missileY = { 0, 0, 0 };
+	private static int[] missileX = new int[3];
+	private static int[] missileY = new int[3];
 	
 	
 	/**
@@ -89,11 +89,23 @@ public class Game {
 										spriteSheet.getSubimage(96, 0, 8, 32),
 										spriteSheet.getSubimage(104, 0, 8, 32)
 		};
-		currentMissile = 0;
+
+		baseX = 240;
+		shotExplode = 0;
+		saucerX = -1;
+		playerShotCount = 0;
 		
-		
+		direction = 0;
+		changeDirection = false;
+		moveDown = false;
+		currentRow = 4;
+		currentCol = 0;
+
 		shotX = -1;
 		baseX = 36;
+		for (int i : missileX) i = -1;
+		for (int i : missileY) i = 0;
+		currentMissile = 0;
 		
 		for (int i = 0; i < 5; ++i) {
 			for (int j = 0; j < 11; ++j) {
@@ -195,6 +207,8 @@ public class Game {
 				 * destroyed.
 				 */
 				if (currentInv.getType() > 0) {
+					// Randomly decide if this invader wants to fire
+					
 					break;
 				}
 			}
