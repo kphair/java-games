@@ -16,6 +16,7 @@ public class Invader {
 	private int type;		// 0:inactive, 1-5:rows 1-5, 6:saucer
 	private BufferedImage image;
 	private int animFrame = 0;
+	private int explode = 0;
 
 	/**
 	 * Constructor for a new Invader object with position and type
@@ -40,8 +41,23 @@ public class Invader {
 	public void redraw(Graphics g) {
 		BufferedImage i;
 
-		i = image.getSubimage(0, animFrame * 8, 16, 8);
+		if (explode == 0) {
+			i = image.getSubimage(0, animFrame * 8, 16, 8);
+		} else {
+			i = Game.invExplosion;
+			explode--;
+		}
 		g.drawImage(i, x, y, 32, 16, null);
+	}
+	
+	/**
+	 * Clear the position where the invader is before it moves down one line
+	 * 
+	 * @param Graphics context for play area
+	 */
+	public void undraw(Graphics g) {
+		g.setColor(Color.black);
+		g.fillRect(x, y, 32, 16);
 	}
 	
 	/**
@@ -77,4 +93,62 @@ public class Invader {
 	public int getType() {
 		return type;
 	}
+
+	/**
+	 * Get the horizontal position of invader
+	 * 
+	 * @return current X position 
+	 */
+	public int getX() {
+		return x;
+	}
+
+	/**
+	 * Get the vertical position of invader
+	 * 
+	 * @return current Y position 
+	 */
+	public int getY() {
+		return y;
+	}
+	
+	
+	/**
+	 * Get the current explode status for this invader
+	 * 
+	 * When an invader explodes, the explosion stays in its place for 16 frames 
+	 * before being blanked. The movement of the rest of the invaders pauses
+	 * while the explosion is visible
+	 * 
+	 * @return explode timer
+	 */
+	public int getExplode() {
+		return explode;
+	}
+
+	/**
+	 * Check to see if the player's shot has hit this invader
+	 * 
+	 * @param explode
+	 */
+	public void testExplode(int shotX, int shotY) {
+
+		int hitX = x;
+		int hity = y;
+		int hitW = 24;
+		int hitH = 16;
+		
+		switch (type) {
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+		}
+		
+		this.explode = explode;
+	}
+
+	
 }
+
