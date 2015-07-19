@@ -25,9 +25,9 @@ public class Window extends JComponent implements ActionListener {
 	// the warning.
 	private static final long serialVersionUID = 1L;
 	private String title;
-	private int width, height;
+	private static int width, height;
 	private JFrame window;
-	private BufferedImage playArea;
+	private static BufferedImage playArea;
 	
 	public Window (String title, int width, int height) {
 		this.title = title;
@@ -47,7 +47,12 @@ public class Window extends JComponent implements ActionListener {
 		 *  window each time
 		 */
 		
-		playArea = new BufferedImage(window.getContentPane().getWidth(), window.getContentPane().getHeight(), BufferedImage.TYPE_INT_RGB);
+		width = window.getContentPane().getWidth();
+		height = window.getContentPane().getHeight();
+		playArea = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
+		Graphics g = playArea.getGraphics(); 
+		g.setColor(Color.BLACK);
+		g.fillRect(0, 0, width, height);
 		
 		/* Attach the keyboard event handlers that are in Game.java
 		 */
@@ -92,11 +97,10 @@ public class Window extends JComponent implements ActionListener {
 		width = window.getContentPane().getWidth();
 		height = window.getContentPane().getHeight();
 		Game.update(playArea.getGraphics());
-		// Clear the background
-		// g.setColor(Color.BLACK);
-		// g.fillRect(0, 0, width, height);
 	}
 
+	
+	
 	/**
 	 * Draw the components children
 	 * In this, the object under user control
@@ -109,4 +113,40 @@ public class Window extends JComponent implements ActionListener {
 		// Game.update(g);
 	}
 
+	/**
+	 * Draw the play area for a new game
+	 * Print up the score, high score,
+	 *  
+	 * SCORE<1> HI-SCORE SCORE<2>
+	 *   0000    0000      0000
+	 */
+	public static void drawPlayArea() {
+		Graphics g = playArea.getGraphics();
+		
+		// Clear the framebuffer to black
+		g.setColor(Color.BLACK);
+		g.fillRect(0, 0, width, height);
+		
+		// Draw the shields
+		g.drawImage(Game.shield, 64, 384, 48, 32, null);
+		g.drawImage(Game.shield, 154, 384, 48, 32, null);
+		g.drawImage(Game.shield, 244, 384, 48, 32, null);
+		g.drawImage(Game.shield, 334, 384, 48, 32, null);
+		
+		// Draw the line at the bottom
+		g.setColor(Color.GREEN);
+		g.fillRect(0, 478, 446, 2);
+
+		Text.print(g, 16, 16, "SCORE<1> HI-SCORE SCORE<2>");
+		Text.print(g, 280, 480, "CREDIT");
+
+		
+		
+	}
+
+	
+	public static void attractModeScreen1() {
+		
+	}
+	
 }
