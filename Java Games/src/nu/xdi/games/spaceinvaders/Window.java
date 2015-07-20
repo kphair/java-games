@@ -50,7 +50,7 @@ public class Window extends JComponent implements ActionListener {
 		width = window.getContentPane().getWidth();
 		height = window.getContentPane().getHeight();
 		playArea = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
-		Graphics g = playArea.getGraphics(); 
+		Graphics g = getPlayAreaGraphics(); 
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, width, height);
 		
@@ -74,6 +74,24 @@ public class Window extends JComponent implements ActionListener {
 	}
 
 	/**
+	 * Get the graphics context for drawing into the play area
+	 * 
+	 * @return a Graphics reference to the play area
+	 */
+	public static Graphics getPlayAreaGraphics() {
+		return playArea.getGraphics();
+	}
+	
+	/**
+	 * Get the image for the play area
+	 * 
+	 * @return a BuffereImage reference to the play area
+	 */
+	public static BufferedImage getPlayArea() {
+		return playArea;
+	}
+	
+	/**
 	 * Timer event handler
 	 * Updates object movement and repaints the game area
 	 * 
@@ -96,11 +114,9 @@ public class Window extends JComponent implements ActionListener {
 		// Update the dimensions of our graphics area in case it was resized 
 		width = window.getContentPane().getWidth();
 		height = window.getContentPane().getHeight();
-		Game.update(playArea.getGraphics());
+		Game.update(getPlayAreaGraphics());
 	}
 
-	
-	
 	/**
 	 * Draw the components children
 	 * In this, the object under user control
@@ -128,24 +144,43 @@ public class Window extends JComponent implements ActionListener {
 		g.fillRect(0, 0, width, height);
 		
 		// Draw the shields
-		g.drawImage(Game.shield, 64, 384, 48, 32, null);
-		g.drawImage(Game.shield, 154, 384, 48, 32, null);
-		g.drawImage(Game.shield, 244, 384, 48, 32, null);
-		g.drawImage(Game.shield, 334, 384, 48, 32, null);
+		g.drawImage(Game.shield, 64, 382, 48, 32, null);
+		g.drawImage(Game.shield, 154, 382, 48, 32, null);
+		g.drawImage(Game.shield, 244, 382, 48, 32, null);
+		g.drawImage(Game.shield, 334, 382, 48, 32, null);
 		
 		// Draw the line at the bottom
 		g.setColor(Color.GREEN);
 		g.fillRect(0, 478, 446, 2);
 
 		Text.print(g, 16, 16, "SCORE<1> HI-SCORE SCORE<2>");
-		Text.print(g, 280, 480, "CREDIT");
-
-		
+		Text.print(g, 280, 480, "CREDIT", Color.GRAY);
 		
 	}
 
 	
 	public static void attractModeScreen1() {
+		Graphics g = playArea.getGraphics();
+		
+		// Clear the framebuffer to black
+		g.setColor(Color.BLACK);
+		g.fillRect(0, 0, width, height);
+
+		g.setColor(Color.GRAY);
+		Text.print(g, 16, 16, "SCORE<1> HI-SCORE SCORE<2>");
+		Game.showScores();
+		
+		g.setColor(Color.WHITE);
+		Text.print(g, 192, 128, "PLAY");
+		Text.print(g, 112, 176, "SPACE  INVADERS");
+		Text.print(g, 64, 240, "*SCORE ADVANCE TABLE*");
+		Text.print(g, 158, 272, "=? MYSTERY");
+		Text.print(g, 158, 304, "=30 POINTS");
+		Text.print(g, 158, 336, "=20 POINTS");
+		Text.print(g, 158, 368, "=10 POINTS");
+		
+		Text.print(g, 280, 480, "CREDIT", Color.GRAY);
+		Game.showCredits();
 		
 	}
 	
