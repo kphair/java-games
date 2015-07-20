@@ -1,5 +1,6 @@
 package nu.xdi.games.spaceinvaders;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
@@ -38,7 +39,17 @@ public class Text {
 	 * @param character (zero-based) to look up from sheet
 	 */
 	public static void printChar(Graphics g, int x, int y, int c) {
-		g.drawImage(fontSheet.getSubimage(c * 8, 0, 8, 8), x, y, 16, 16, null);
+		BufferedImage charImage = fontSheet.getSubimage(c * 8, 0, 8, 8);
+		int w = charImage.getWidth();
+		int h = charImage.getHeight();
+
+		for (int cy = 0; cy < h; ++cy) {
+			for (int cx = 0; cx < w; ++cx) {
+				if ((charImage.getRGB(cx, cy) & 0xffffff) > 0) {
+					g.fillRect(x + cx * 2, y + cy * 2, 2, 2);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -74,6 +85,11 @@ public class Text {
 				x += 16;
 			}
 		}
+	}
+	
+	public static void print(Graphics g, int x, int y, String text, Color c) {
+		g.setColor(c);
+		print(g, x, y, text);
 	}
 
 }
