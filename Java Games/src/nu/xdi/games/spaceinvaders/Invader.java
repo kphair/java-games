@@ -17,6 +17,8 @@ public class Invader {
 	private BufferedImage image;
 	private int animFrame = 0;
 	private int explode = 0;
+	private static BufferedImage explosion;
+	private static int freeze;
 
 	/**
 	 * Constructor for a new Invader object with position and type
@@ -25,12 +27,33 @@ public class Invader {
 	 * @param y
 	 * @param type
 	 */
-	public Invader(int x, int y, int type, BufferedImage image) {
+	public Invader(int x, int y, int type, BufferedImage image, BufferedImage explosion) {
 		this.x = x;
 		this.y = y;
 		this.type = type;
 		this.image = image;
 		this.animFrame = 0;
+	}
+	
+	public Invader (Invader[] a, BufferedImage sprites, BufferedImage explosion) {
+		
+		BufferedImage image = null;
+		Invader.explosion = explosion;
+		freeze = 0;
+
+		for (int i = 0; i < 5; ++i) {
+			switch (i) {
+				case 0: image = sprites.getSubimage(32, 0, 16, 16); break;
+				case 1:
+				case 2: image = sprites.getSubimage(16, 0, 16, 16); break; 
+				case 3:
+				case 4: image = sprites.getSubimage(0, 0, 16, 16); break;
+			}
+			for (int j = 0; j < 11; ++j) {
+				a[i * 11 + j] = new Invader(40 + j * 32, 128 + i * 32, i + 1, image, explosion);
+			}
+		}
+
 	}
 	
 	/**
@@ -43,11 +66,24 @@ public class Invader {
 
 		if (explode == 0) {
 			i = image.getSubimage(0, animFrame * 8, 16, 8);
+			g.drawImage(i, x, y, 32, 16, null);
 		} else {
-			i = Game.invExplosion;
-			explode--;
+			if (explode == 16) {
+				g.drawImage(Invader.explosion, x, y, 32, 16, null);
+				explode--;
+			} else if (--explode == 0) {
+				// Erase the explosion
+				g.drawImage(Invader.explosion, x, y, 32, 16, null);
+				g.setXORMode(Color.BLACK);
+				g.drawImage(Invader.explosion, x, y, 32, 16, null);
+				g.setPaintMode();
+				if (freeze > 0) freeze--;
+				if (freeze == 0) {
+					type = 0;
+				}
+				
+			}
 		}
-		g.drawImage(i, x, y, 32, 16, null);
 	}
 	
 	/**
@@ -112,7 +148,6 @@ public class Invader {
 		return y;
 	}
 	
-	
 	/**
 	 * Get the current explode status for this invader
 	 * 
@@ -125,30 +160,15 @@ public class Invader {
 	public int getExplode() {
 		return explode;
 	}
-
-	/**
-	 * Check to see if the player's shot has hit this invader
-	 * 
-	 * @param explode
-	 */
-	public void testExplode(int shotX, int shotY) {
-
-		int hitX = x;
-		int hity = y;
-		int hitW = 24;
-		int hitH = 16;
-		
-		switch (type) {
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-		}
-		
-		this.explode = explode;
+	
+	public void setExplode() {
+		explode = 16;
+		freeze++;
+	}
+	
+	public int getFreeze() {
+		return freeze;
 	}
 
-	
 }
 
