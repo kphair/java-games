@@ -26,12 +26,48 @@ public class InvadersApp {
 
 	public static void main(String[] args ) {
 		
+		int i = 0;
+		
 		new Window("Space Invaders", 452,540);
 
 		Text.loadFont();
-		Game.StartGame();
+
+		Window.attractModeScreen1();
+
+		while (true) {
+			while (true) {
+				pause(1);
+				if (Controls.getCoin()) {
+					while (Controls.getCoin()) {
+						pause(1);
+					}
+					System.out.println("Credit added");
+					Game.addCredit();
+					Game.showCredits();
+				} else if (Controls.getP1Start()) {
+					break;
+				}
+			}
+			System.out.println("Attract mode ended");
+		
+			Game.StartGame();
+
+			while (true) {
+				pause(1);
+				if (Game.getLives() == 0) break;
+			
+			}
+		}
 		
 		//System.exit(0);
+	}
+	
+	public static void pause(int frames) {
+		try {
+			Thread.sleep(frames * 1000 / 60);
+		} catch (Exception e) {
+			
+		}
 	}
 
 }
