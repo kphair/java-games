@@ -33,13 +33,7 @@ public class Game {
 
 	private static BufferedImage spriteSheet;
 	
-	private static BufferedImage row4Sprite; 
-	private static BufferedImage row2Sprite; 
-	private static BufferedImage row1Sprite;
-	private static BufferedImage[] image;
-	
-	private static BufferedImage shotExplosion;
-	static BufferedImage invExplosion;
+	public  static BufferedImage shotExplosion;
 	private static BufferedImage cheekySprite;
 	private static BufferedImage base;
 	private static BufferedImage missileHit;
@@ -48,19 +42,12 @@ public class Game {
 	private static BufferedImage saucer;
 	private static BufferedImage saucerExplosion;
 
-	/* 
-	 * Invaders can have up to three missiles in play
-	 * One of them gets updated per frame. currentMissile is used to keep
-	 * track of which one will be updated in the current frame and it constantly
-	 * loops around to 0
-	 */
-	private static BufferedImage[] missiles;
-	private static int currentMissile;
-	private static int[] missileX = new int[3];
-	private static int[] missileY = new int[3];
-	private static int[] missileF = new int[3];
-	private static int[] missileExplode = new int[3];
-	
+	private static int credits;
+	private static int score1;
+	private static int score2;
+	private static int hiScore;
+	private static int lives;
+	private static Missile missile;
 	
 	/**
 	 * Start the game by resetting the score and initialising a new array of invaders
@@ -74,12 +61,6 @@ public class Game {
 			return;
 		}
 
-		row4Sprite = spriteSheet.getSubimage(0, 0, 16, 16); 
-		row2Sprite = spriteSheet.getSubimage(16, 0, 16, 16); 
-		row1Sprite = spriteSheet.getSubimage(32, 0, 16, 16);
-		image = new BufferedImage[] { row1Sprite, row2Sprite, row2Sprite, row4Sprite, row4Sprite };
-		
-		invExplosion = spriteSheet.getSubimage(0, 16, 16, 8);
 		cheekySprite = spriteSheet.getSubimage(16, 16, 32, 8);
 		base = spriteSheet.getSubimage(0, 24, 48, 8);
 		shield = spriteSheet.getSubimage(48, 0, 24, 16);
@@ -87,10 +68,6 @@ public class Game {
 		shotExplosion = spriteSheet.getSubimage(48, 24, 8, 8);
 		saucer = spriteSheet.getSubimage(56, 24, 16, 8);
 		saucerExplosion = spriteSheet.getSubimage(48, 16, 24, 8);
-		missiles = new BufferedImage[] { spriteSheet.getSubimage(72, 0, 8, 32),
-										spriteSheet.getSubimage(80, 0, 8, 32),
-										spriteSheet.getSubimage(88, 0, 8, 32)
-		};
 
 		baseX = 240;
 		shotExplode = 0;
@@ -105,24 +82,39 @@ public class Game {
 
 		shotX = -1;
 		baseX = 36;
-		for (int i = 0; i < missileX.length; ++i) {
-			missileX[i] = -1;
-			missileY[i] = 0;
-			missileF[i] = 0;
-			missileExplode[i] = 0;
-		}
-		currentMissile = 0;
 		
-		for (int i = 0; i < 5; ++i) {
-			for (int j = 0; j < 11; ++j) {
-				invaders[i * 11 + j] = new Invader(40 + j * 32, 128 + i * 32, i + 1, image[i]);
-			}
-		}
+		lives = 3;
+		score1 = 0;
+		score2 = 0;
+		
+		missile = new Missile(spriteSheet.getSubimage(72, 0, 9, 32));
+
+		new Invader(invaders, spriteSheet.getSubimage(0, 0, 48, 24), spriteSheet.getSubimage(0, 16, 16, 8));
+
 		Game.setDirection(1);
 		
 		Window.drawPlayArea();
+
+		showScores();
+		showCredits();
+		showLives();
+		
 		
 		gameRunning = true;
+	}
+	
+	private static boolean checkCollision (int xPos, int yPos) {
+		
+		// The destination area to be written into for comparison
+		BufferedImage destImg = Window.getPlayArea().getSubimage(xPos, yPos, 1, 8);
+
+		// Scan the destination and flag a collision if a pixel is lit
+		for (int y = 0; y < 4; ++y) {
+			if (((destImg.getRGB(0, y * 2) & 0xffffff) > 0)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**
@@ -152,10 +144,39 @@ public class Game {
 					g.setColor(Color.BLACK);
 					g.clearRect(shotX + 6, shotY, 2, 8);
 					shotY -= 8;
+					
 					// Test if it's reached the top of the screen or can be redrawn in new position
 					if (shotY <= 64) {
 						shotExplode = 8;
+					} else if (checkCollision(shotX + 6, shotY)) {
+						// Shot will collide with something
+						shotY -= 8;
+						shotExplode = 8;
+						// Is it an invader?
+						// Iterate through the invader array to see which one it is
+						for (Invader inv : invaders ) {
+							if (inv.getType() > 0) {
+								// is it within the hitbox?
+								if (shotX >= inv.getX() - 2 && shotX <= inv.getX() + 22) {
+									if (shotY >= inv.getY() && shotY <= inv.getY() + 14) {
+										inv.setExplode();
+										shotX = -2;
+										switch (inv.getType()) {
+											case 1: score1 += 10;		// Top score
+											case 2: 
+											case 3: score1 += 10;		// Mid score
+											case 4: 
+											case 5: score1 += 10;		// Low score
+										}
+										showScores();
+										shotExplode = 0;
+										break;
+									}
+								}
+							}
+						}
 					} else {
+						// otherwise just draw it in new position
 						g.setColor(Color.WHITE);
 						g.fillRect(shotX + 6, shotY, 2, 8);
 					}
@@ -165,57 +186,12 @@ public class Game {
 			/*
 			 * Invader missile handler
 			 */
-			if (missileX[currentMissile] > 0) {
-
-				
-				// If missile active, perform its actions
-				if (missileExplode[currentMissile] <= 0) {
-					
-					// Remove it from the screen
-					if (missileExplode[currentMissile] == 0) {
-						g.drawImage(missiles[currentMissile].getSubimage(0, missileF[currentMissile] * 8, 8, 8), missileX[currentMissile], missileY[currentMissile], 16, 16, null);
-						g.setXORMode(Color.BLACK);
-						g.drawImage(missiles[currentMissile].getSubimage(0, missileF[currentMissile] * 8, 8, 8), missileX[currentMissile], missileY[currentMissile], 16, 16, null);
-						g.setPaintMode();
-					} else {
-						missileExplode[currentMissile] = 0;
-					}
-
-					// Advance to the next frame of animation
-					if (++missileF[currentMissile] == 4) missileF[currentMissile] = 0;
-
-					// Move missile down and draw it
-					missileY[currentMissile] += 8;
-					if (missileY[currentMissile] > 457) {
-						missileExplode[currentMissile] = 8;
-					} else {
-						g.drawImage(missiles[currentMissile].getSubimage(0, missileF[currentMissile] * 8, 8, 8), missileX[currentMissile], missileY[currentMissile], 16, 16, null);
-					}
-				// Make it explode
-				} else if (missileExplode[currentMissile] == 8) {
-					g.drawImage(shotExplosion, missileX[currentMissile], missileY[currentMissile], 16, 16, null);
-					missileExplode[currentMissile]--;
-					System.out.println(missileExplode[currentMissile]);
-				// Remove from screen and mark it for reuse
-				} else if (--missileExplode[currentMissile] == 0) {
-					System.out.println(missileExplode[currentMissile]);
-					g.drawImage(shotExplosion, missileX[currentMissile], missileY[currentMissile], 16, 16, null);
-					g.setXORMode(Color.BLACK);
-					g.drawImage(shotExplosion, missileX[currentMissile], missileY[currentMissile], 16, 16, null);
-					g.setPaintMode();
-					missileX[currentMissile] = -1;
-				}
+			if (missile.isActive()) {
+				missile.update();
 			}
-			
 			// Move to the next missile slot
-			if (++currentMissile == 3) currentMissile = 0;
-			
-			Text.print(g, 48, 48, "0000");
-			Text.print(g, 176, 48, "0000");
-			Text.print(g, 336, 48, "0000");
-			Text.print(g, 16, 480, "3");
-			Text.print(g, 392, 480, "00");
-
+			missile.tick();
+		
 			marchInvaders(g);
 		}
 	}
@@ -227,70 +203,79 @@ public class Game {
 	 */
 	public static void marchInvaders(Graphics g) {
 		int i;
+		int activeCount = 0;
 		
 		while (true) {
 			Invader currentInv = invaders[currentRow * 11 + currentCol];
+			if (currentInv.getFreeze() > 0) {
+				for (Invader inv : invaders) {
+					if (inv.getType() > 0 && inv.getExplode() == 0) {
+						activeCount++;
+					}
+					if (inv.getExplode() > 0) {
+						inv.redraw(g);
+					}
+				}
+				break;
+			}
+			for (Invader inv : invaders) {
+				if (inv.getType() > 0 && inv.getExplode() == 0) {
+					activeCount++;
+				}
+			}
+			if (activeCount == 0) {
+				gameRunning = false;
+				System.out.println("");
+			}
+			// If the current invader is active, move it and give it chance to shoot
 			if (currentInv.getType() > 0) {
-				currentInv.testExplode(shotX, shotY);
 				currentInv.moveAcross();
 				if (moveDown) {
 					currentInv.undraw(g);
 					currentInv.moveDown();
 				}
 				currentInv.redraw(g);
-				if (currentInv.getExplode() > 0) break;
 
 				// Give the current invader a chance to fire
-				if (new Random().nextInt(100) > 92) {
+				if (new Random().nextInt(100) > 90) {
 					// Scan down to make sure it isn't above another invader
 					for (i = currentRow; i <= 4; ++i)  {
 						if (i == 4) break;
 						if (invaders[(i + 1) * 11 + currentCol].getType() > 0) {
 							break;
-						}
+						}	
 					}
 					// if i == 4 then all clear. Use the next free missile slot if one available
 					if (i == 4) {
-						for (i = 0; i < 3; ++i) {
-							System.out.print(missileX[i] + " ");
-							if (missileX[i] < 0) {
-								missileX[i] = currentInv.getX() + 15;
-								missileY[i] = currentInv.getY() + 8;
-								missileExplode[i] = -1;
-								System.out.println("Shots fired!");
-								break;
-							} else {
-								System.out.println("No missile slots");
-							}
-						}
+						missile.dropMissile(currentInv.getX() + 14, currentInv.getY() + 32);
 					}
 				}
-
-				currentCol++;
-				if (currentCol > 10) {
-					currentCol = 0;
-					currentRow--;
+			}
+			// Move to the next invader in the array
+			currentCol++;
+			if (currentCol > 10) {
+				currentCol = 0;
+				currentRow--;
+				/*
+				 * If all the invaders are done check to see if the changeDirection flag is set
+				 */
+				if (currentRow < 0) {
+					currentRow = 4;
 					/*
-					 * If all the invaders are done check to see if the changeDirection flag is set
+					 * Check to see if the direction of the invaders needs to be changed
+					 * and if they need to be told they can move down 
 					 */
-					if (currentRow < 0) {
-						currentRow = 4;
-						/*
-						 * Check to see if the direction of the invaders needs to be changed
-						 * and if they need to be told they can move down 
-						 */
-						if (changeDirection) {
-							direction = -direction;
-							currentCol = 0;
-							changeDirection = false;
-							moveDown = true;
-						} else {
-							moveDown = false;
-						}
+					if (changeDirection) {
+						direction = -direction;
+						currentCol = 0;
+						changeDirection = false;
+						moveDown = true;
+					} else {
+						moveDown = false;
 					}
 				}
-				break;
 			} // end of active invader's activity
+			if (currentInv.getType() > 0) break;
 		}
 	}
 
@@ -302,7 +287,7 @@ public class Game {
 	 */
 	public static void movement(Container window) {
 
-		if (Controls.getLeft() && baseX > 36) baseX-= 2;								// LEFT
+		if (Controls.getLeft() && baseX > 36) baseX -= 2;								// LEFT
 		if (Controls.getRight() && baseX < 372) baseX += 2;		// RIGHT
 		// Fire key has to be released before another shot can be fired.
 		if (!Controls.getFire() && shotX == -2) {
@@ -357,4 +342,58 @@ public class Game {
 	public static int getDirection() {
 		return direction;
 	}
+	
+	public static int getScore1() {
+		return score1;
+	}
+	
+	public static int getScore2() {
+		return score2;
+	}
+	
+	public static int getHiSCore() {
+		return hiScore;
+	}
+	
+	public static int getCredits() {
+		return credits;
+	}
+
+	public static void addCredit() {
+		credits++;
+	}
+	
+	public static int getLives() {
+		return lives;
+	}
+	
+	public static void showScores() {
+		Graphics g = Window.getPlayAreaGraphics();
+		g.setColor(Color.BLACK);
+		g.fillRect(48, 48, 64, 16);
+		g.fillRect(176, 48, 64, 16);
+		g.fillRect(336, 48, 64, 16);
+		g.setColor(Color.RED);
+		Text.print(g, 48, 48, String.format("%04d", score1));
+		Text.print(g, 176, 48, String.format("%04d", hiScore));
+		Text.print(g, 336, 48, String.format("%04d", score2));
+	}
+	
+	public static void showCredits() {
+		Graphics g = Window.getPlayAreaGraphics();
+		g.setColor(Color.GREEN);
+		Text.print(g, 392, 480, String.format("%02d", getCredits()));
+	}
+	
+	public static void showLives() {
+		Graphics g = Window.getPlayAreaGraphics();
+		g.setColor(Color.GREEN);
+		Text.print(g, 16, 480, String.format("%d", lives));
+		if (lives > 1) {
+			for (int i = 1; i < lives; ++i) {
+				g.drawImage(base.getSubimage(0, 0, 16, 8), i * 48, 480, 32, 16, null);
+			}
+		}
+	}
+	
 }
