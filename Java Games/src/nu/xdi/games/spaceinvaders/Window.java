@@ -171,12 +171,17 @@ public class Window extends JComponent implements ActionListener {
 		Game.showScores();
 		
 		g.setColor(Color.WHITE);
-		Text.print(g, 192, 128, "PLAY");
+		Text.print(g, 192, 128, "PLAy");
 		Text.print(g, 112, 176, "SPACE  INVADERS");
 		Text.print(g, 64, 240, "*SCORE ADVANCE TABLE*");
+		g.drawImage(Game.saucer, 126, 272, 32, 16, null);
 		Text.print(g, 158, 272, "=? MYSTERY");
+
+		g.drawImage(Game.spriteSheet.getSubimage(32, 0, 16, 8), 126, 304, 32, 16, null);
 		Text.print(g, 158, 304, "=30 POINTS");
+		g.drawImage(Game.spriteSheet.getSubimage(16, 0, 16, 8), 126, 336, 32, 16, null);
 		Text.print(g, 158, 336, "=20 POINTS");
+		g.drawImage(Game.spriteSheet.getSubimage(0, 0, 16, 8), 126, 368, 32, 16, null);
 		Text.print(g, 158, 368, "=10 POINTS");
 		
 		Text.print(g, 280, 480, "CREDIT", Color.GRAY);
