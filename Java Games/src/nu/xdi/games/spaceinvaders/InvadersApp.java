@@ -1,5 +1,7 @@
 package nu.xdi.games.spaceinvaders;
 
+import nu.xdi.graphics.util.Images;
+
 /**
  * Space Invaders game in Java
  * 
@@ -18,7 +20,7 @@ package nu.xdi.games.spaceinvaders;
  * Rows 2 and 3, 20 points
  * Rows 4 and 5, 10 points
  * Saucer (appears every 25 seconds). Score is 50, 100, 150 or 300 points.
- * Worth 300 points after the first 23 shots and every 15th shot thereafter
+ * Worth 300 points on the 23rd and every 15th shot thereafter
  * (including the shot that hits the saucer)
  * 
  */
@@ -31,6 +33,7 @@ public class InvadersApp {
 		new Window("Space Invaders", 452,540);
 
 		Text.loadFont();
+		loadSprites();
 
 		Window.attractModeScreen1();
 
@@ -53,8 +56,8 @@ public class InvadersApp {
 			Game.StartGame();
 
 			while (true) {
-				pause(1);
-				if (Game.getLives() == 0) break;
+				pause(20);		// wait 1/3 seconds
+				if (Game.getLives1() == 0) break;
 			
 			}
 		}
@@ -62,6 +65,10 @@ public class InvadersApp {
 		//System.exit(0);
 	}
 	
+	/**
+	 * Wait for a specified number of frames (specifically, timer events)
+	 * @param frames
+	 */
 	public static void pause(int frames) {
 		try {
 			Thread.sleep(frames * 1000 / 60);
@@ -70,4 +77,27 @@ public class InvadersApp {
 		}
 	}
 
+	/**
+	 * Load the sprite sheet and extract the sprites into their separate BuffereImage objects
+	 */
+	private static void loadSprites() {
+
+		Game.spriteSheet = new Images().loadImage("/nu/xdi/games/spaceinvaders/SpaceInvadersSpriteSheet.png");
+		if (Game.spriteSheet == null) {
+			System.out.println("Sprite Sheet not available!");
+			return;
+		}
+		Game.base = Game.spriteSheet.getSubimage(0, 24, 48, 8);
+		Game.shotExplosion = Game.spriteSheet.getSubimage(32, 16, 8, 8);
+		Game.shield = Game.spriteSheet.getSubimage(48, 0, 24, 16);
+		Game.cheekySprite = Game.spriteSheet.getSubimage(16, 16, 32, 8);
+		Invader.sprites = Game.spriteSheet.getSubimage(0, 0, 48, 24);
+		Invader.explosion = Game.spriteSheet.getSubimage(0, 16, 16, 8);
+		Game.missileExplosion = Game.spriteSheet.getSubimage(48, 24, 8, 8);
+		Game.saucerExplosion = Game.spriteSheet.getSubimage(48, 16, 24, 8);
+		Game.saucer = Game.spriteSheet.getSubimage(56, 24, 16, 8);
+		Game.missile = new Missile(Game.spriteSheet.getSubimage(72, 0, 9, 32));
+		new Invader();
+		
+	}
 }
