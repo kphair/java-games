@@ -14,51 +14,79 @@ public class Invader {
 	private int x;
 	private int y;
 	private int type;		// 0:inactive, 1-5:rows 1-5, 6:saucer
-	private BufferedImage image;
 	private int animFrame = 0;
 	private int explode = 0;
-	private static BufferedImage explosion;
+	private BufferedImage image;
+	static BufferedImage sprites = null;
+	static BufferedImage explosion = null;
+	static BufferedImage highInv = null;
+	static BufferedImage medInv = null;
+	static BufferedImage lowInv = null;
 	private static int freeze;
 
 	/**
 	 * Constructor for a new Invader object with position and type
-	 * 
 	 * @param x
 	 * @param y
 	 * @param type
+	 * @param invader sprite image
+	 * @param invader exploding image
 	 */
-	public Invader(int x, int y, int type, BufferedImage image, BufferedImage explosion) {
+	public Invader (int x, int y, int type, BufferedImage image) {
 		this.x = x;
 		this.y = y;
 		this.type = type;
 		this.image = image;
 		this.animFrame = 0;
+		this.explode = 0;
 	}
 	
-	public Invader (Invader[] a, BufferedImage sprites, BufferedImage explosion) {
-		
-		BufferedImage image = null;
-		Invader.explosion = explosion;
-		freeze = 0;
+	/**
+	 * Initialise the invader array and sprites for the different types
+	 * @param a
+	 * @param sprites
+	 * @param explosion
+	 */
+	public Invader () {
 
-		for (int i = 0; i < 5; ++i) {
-			switch (i) {
-				case 0: image = sprites.getSubimage(32, 0, 16, 16); break;
-				case 1:
-				case 2: image = sprites.getSubimage(16, 0, 16, 16); break; 
-				case 3:
-				case 4: image = sprites.getSubimage(0, 0, 16, 16); break;
-			}
-			for (int j = 0; j < 11; ++j) {
-				a[i * 11 + j] = new Invader(40 + j * 32, 128 + i * 32, i + 1, image, explosion);
-			}
+		BufferedImage image = null;
+		Invader[] a = Game.invaders;
+		
+			System.out.println("Initialising new invaders array");
+		if (highInv == null) {
+			highInv = sprites.getSubimage(32, 0, 16, 16);
+			medInv = sprites.getSubimage(16, 0, 16, 16); 
+			lowInv = sprites.getSubimage(0, 0, 16, 16);
 		}
 
+		for (int j = 0; j < 11; ++j) {
+			a[j] = new Invader(40 + j * 32, 128, 1, highInv);
+			a[j + 11] = new Invader(40 + j * 32, 128 + 32, 2, medInv);
+			a[j + 22] = new Invader(40 + j * 32, 128 + 64, 3, medInv);
+			a[j + 33] = new Invader(40 + j * 32, 128 + 96, 4, lowInv);
+			a[j + 44] = new Invader(40 + j * 32, 128 + 128, 5, lowInv);
+		}
+		
+		freeze = 0;
+	}
+	
+	/**
+	 * Initialise a single invader
+	 * @param x
+	 * @param y
+	 * @param type
+	 */
+	public void init (int x, int y, int type) {
+		this.x = x;
+		this.y = y;
+		this.type = type;
+		this.animFrame = 0;
+		this.explode = 0;
+		this.freeze = 0;
 	}
 	
 	/**
 	 * Redraw the invader on the screen with the current position and type
-	 * 
 	 * @param Graphics context for play area
 	 */
 	public void redraw(Graphics g) {
@@ -166,7 +194,7 @@ public class Invader {
 		freeze++;
 	}
 	
-	public int getFreeze() {
+	public static int getFreeze() {
 		return freeze;
 	}
 
