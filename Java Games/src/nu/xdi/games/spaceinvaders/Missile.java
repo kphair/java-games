@@ -9,9 +9,12 @@ import java.awt.image.BufferedImage;
  * 
  * @author Kevin Phair
  * @date 19 Jul 2015
+ * 
  */
 public class Missile {
 
+	// TASK: Refactor so we use Missile[0-2] in Game instead of Missile() using arrays.  
+	
 	private static int[] x = { -1, -1, -1 };
 	private static int[] y = { 0, 0, 0 };
 	private static int[] active = { 0, 0, 0 };
@@ -145,15 +148,15 @@ public class Missile {
 				g.setXORMode(Color.BLACK);
 				g.drawImage(mImg, x, y, 6, 16, null);
 				g.setPaintMode();
-				g.drawImage(Game.shotExplosion, x - 4, y + 8, 16, 16, null);
+				g.drawImage(Game.missileExplosion, x - 4, y + 8, 16, 16, null);
 				explode[num]--;
 			} else if (explode[num] > 0) {
 				if (--explode[num] == 0) {
 //					System.out.println("Erasing and making inactive");
 					setInactive();
-					g.drawImage(Game.shotExplosion, x - 4, y + 8, 16, 16, null);
+					g.drawImage(Game.missileExplosion, x - 4, y + 8, 16, 16, null);
 					g.setXORMode(Color.BLACK);
-					g.drawImage(Game.shotExplosion, x - 4, y + 8, 16, 16, null);
+					g.drawImage(Game.missileExplosion, x - 4, y + 8, 16, 16, null);
 					g.setPaintMode();
 				};
 			}
