@@ -134,6 +134,14 @@ public class Missile {
 						g.drawImage(mImg, x, y, 6, 16, null);
 //						System.out.println("Missile hit something");
 						explode[num] = 8;
+						// Did missile hit our base?
+						if (Missile.y[num] >= 424 && Missile.y[num] < 448) {
+							if (Missile.x[num] > Game.getBaseX() + 2 && Missile.x[num] < Game.getBaseX() + 42) {
+								System.out.println("Enemy hit base!");
+								System.out.println("Missile X: " + Missile.x[num] + " Base X: " + Game.getBaseX());
+								Game.setBaseExplode();
+							}
+						}
 					} else {
 						
 						y += 8;
