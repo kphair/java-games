@@ -21,14 +21,10 @@ public class Game {
 	private static int baseX = 240;
 	private static int shotX, shotY;
 	private static int shotExplode = 0;
-	private static int playerShotCount;
+	private static int playerShotCount = 0;
+	private static int baseExplode = 0;
+	private static int baseExplodeTimer = 0;
 	
-	private static int direction = 0;
-	private static boolean changeDirection = false;
-	private static boolean moveDown = false;
-	private static int currentRow = 4;
-	private static int currentCol = 0;
-	static Invader[] invaders = new Invader[55];
 	static boolean gameRunning = false;
 
 	static BufferedImage spriteSheet;
@@ -55,6 +51,7 @@ public class Game {
 	private static int lives2 = 3;
 	private static int baseInactive = 0;
 	private static int waveEndTimer = 0;
+	static int currentWave = 0;
 	
 	/**
 	 * Start the game by resetting the score and initialising a new array of invaders
@@ -73,19 +70,14 @@ public class Game {
 		score1 = 0;
 		score2 = 0;
 
-		direction = 0;
-		changeDirection = false;
-		moveDown = false;
-		currentRow = 4;
-		currentCol = 0;
-		
-		Game.setDirection(1);
 		Window.drawPlayArea();
+		new Invader();
 		showScores();
 		showCredits();
 		showLives(lives1);
 		baseInactive = 120;
 		waveEndTimer = 0;
+		currentWave = 0;
 		gameRunning = true;
 		
 	}
@@ -111,13 +103,42 @@ public class Game {
 	public static void update(Graphics g) {
 		
 		if (gameRunning) {
-
 			
 			// Draw player base
-			if (baseInactive == 0) {
-				g.drawImage(base.getSubimage(0, 0, 16, 8), baseX, 432, 32, 16, null);
+			if (baseExplode == 0 && baseExplodeTimer == 0) {
+				if (baseInactive == 0) {
+					g.drawImage(base.getSubimage(0, 0, 16, 8), baseX, 432, 32, 16, null);
+				} else {
+					baseInactive--;
+				}
 			} else {
-				baseInactive--;
+				if (baseExplode > 0) {
+					baseExplode = 0;
+					baseExplodeTimer = 1;
+					Sound.baseExplosion.play();
+				} else {
+					if (baseExplodeTimer % 10 == 1) {
+						g.drawImage(base.getSubimage(16, 0, 16, 8), baseX, 432, 32, 16, null);
+					} else if (baseExplodeTimer % 10 == 6) {
+						g.drawImage(base.getSubimage(32, 0, 16, 8), baseX, 432, 32, 16, null);
+					} 
+					if (baseExplodeTimer++ == 90) {
+						g.drawImage(base.getSubimage(32, 0, 16, 8), baseX, 432, 32, 16, null);
+						g.setXORMode(Color.BLACK);
+						g.drawImage(base.getSubimage(32, 0, 16, 8), baseX, 432, 32, 16, null);
+						g.setPaintMode();
+						baseExplodeTimer = 0;
+						baseInactive = 120;
+						baseX = 36;
+						lives1--;
+						showLives(lives1);
+						if (lives1 == 0) {
+							if (score1 > hiScore) hiScore = score1;
+							showScores();
+							gameRunning = false;
+						}
+					}
+				}
 			}
 
 			// TASK: Extract this block out into its own class
@@ -127,6 +148,7 @@ public class Game {
 				if (shotExplode > 0) {
 					g.drawImage(shotExplosion, shotX, shotY + 4, 16, 16, null);
 					if (--shotExplode == 0) {
+						Sound.baseFire.stop();
 						g.setXORMode(Color.BLACK);
 						g.drawImage(shotExplosion, shotX, shotY + 4, 16, 16, null);
 						g.setPaintMode();
@@ -147,7 +169,7 @@ public class Game {
 						shotExplode = 8;
 						// Is it an invader?
 						// Iterate through the invader array to see which one it is
-						for (Invader inv : invaders ) {
+						for (Invader inv : Invader.invaders ) {
 							if (inv.getType() > 0) {
 								// is it within the hitbox?
 								if (shotX >= inv.getX() - 2 && shotX <= inv.getX() + 24) {
@@ -185,126 +207,35 @@ public class Game {
 			// Move to the next missile slot
 			missile.tick();
 		
-			if (marchInvaders(g) == false && waveEndTimer == 0) {
-				waveEndTimer = 60;
-			} else if (waveEndTimer > 0) {
-				System.out.println(waveEndTimer);
-				if (--waveEndTimer == 0) {
-					System.out.println("New wave");
-					
-					missile = new Missile(spriteSheet.getSubimage(72, 0, 9, 32));
-					new Invader();
-					Game.setDirection(1);
-					Window.drawPlayArea();
-					showScores();
-					showCredits();
-					showLives(lives1);
-					saucerScore = 50;
-					playerShotCount = 0;
-					changeDirection = false;
-					moveDown = false;
-					currentRow = 4;
-					currentCol = 0;
+			/*
+			 * Check for end of current wave
+			 */
+			if (baseExplodeTimer == 0) {
+				if (Invader.marchInvaders(g) == false && waveEndTimer == 0) {
+					waveEndTimer = 60;
+				} else if (waveEndTimer > 0) {
+					System.out.println(waveEndTimer);
+					if (--waveEndTimer == 0) {
+						
+						missile = new Missile(spriteSheet.getSubimage(72, 0, 9, 32));
+						new Invader();
+						Invader.setDirection(1);
+						Window.drawPlayArea();
+						showScores();
+						showCredits();
+						showLives(lives1);
+						saucerScore = 50;
+						playerShotCount = 0;
+						currentWave++;
+						if (currentWave == 7) currentWave = 0;		// Wave 6 is as low as the invaders can be
+						System.out.println("New wave " + currentWave);
+					}
 				}
 			}
-			
 		}
 	}
 
 
-	/**
-	 * Step from left to right across the current row of invaders
-	 * moving up one row if the end is reached
-	 */
-	public static boolean marchInvaders(Graphics g) {
-		int i;
-		int activeCount = 0;
-		
-		while (true) {
-			Invader currentInv = invaders[currentRow * 11 + currentCol];
-			if (currentInv.getFreeze() > 0) {
-				for (Invader inv : invaders) {
-					if (inv.getType() > 0 && inv.getExplode() == 0) {
-						activeCount++;
-					}
-					if (inv.getExplode() > 0) {
-						inv.redraw(g);
-					}
-				}
-				break;
-			}
-
-			if (invadersLeft(invaders) == 0) return false;
-
-			// If the current invader is active, move it and give it chance to shoot
-			if (currentInv.getType() > 0) {
-				currentInv.moveAcross();
-				if (moveDown) {
-					currentInv.undraw(g);
-					currentInv.moveDown();
-				}
-				currentInv.redraw(g);
-
-				// Give the current invader a chance to fire
-				if (new Random().nextInt(100) > 90) {
-					// Scan down to make sure it isn't above another invader
-					for (i = currentRow; i <= 4; ++i)  {
-						if (i == 4) break;
-						if (invaders[(i + 1) * 11 + currentCol].getType() > 0) {
-							break;
-						}	
-					}
-					// if i == 4 then all clear. Use the next free missile slot if one available
-					if (i == 4) {
-						missile.dropMissile(currentInv.getX() + 14, currentInv.getY() + 32);
-					}
-				}
-			}
-			// Move to the next invader in the array
-			currentCol++;
-			if (currentCol > 10) {
-				currentCol = 0;
-				currentRow--;
-				/*
-				 * If all the invaders are done check to see if the changeDirection flag is set
-				 */
-				if (currentRow < 0) {
-					currentRow = 4;
-					/*
-					 * Check to see if the direction of the invaders needs to be changed
-					 * and if they need to be told they can move down 
-					 */
-					if (changeDirection) {
-						direction = -direction;
-						currentCol = 0;
-						changeDirection = false;
-						moveDown = true;
-					} else {
-						moveDown = false;
-					}
-				}
-			} // end of active invader's activity
-			if (currentInv.getType() > 0) break;
-		}
-		return true;
-	}
-
-	/**
-	 * Counts up the remaining invaders on the screen
-	 * Includes invaders which are in the process of blowing up
-	 * @param invader array
-	 * @return number of invaders
-	 */
-	private static int invadersLeft(Invader[] invaders) {
-		int activeCount = 0;
-		
-		for (Invader inv : invaders) {
-			if (inv.getType() > 0 && inv.getExplode() == 0) {
-				activeCount++;
-			}
-		}
-		return activeCount;
-	}
 
 
 	/**
@@ -313,7 +244,7 @@ public class Game {
 	 */
 	public static void movement(Container window) {
 
-		if (baseInactive == 0) {
+		if (baseInactive == 0 && baseExplodeTimer == 0) {
 			if (Controls.getLeft() && baseX > 36) baseX -= 2;								// LEFT
 			if (Controls.getRight() && baseX < 372) baseX += 2;		// RIGHT
 
@@ -324,7 +255,7 @@ public class Game {
 			if (Controls.getFire() && shotX == -1 && Invader.getFreeze() == 0) {
 				shotX = baseX + 10	;
 				shotY = 432;
-				
+				Sound.baseFire.play();
 				playerShotCount++;
 				if (playerShotCount == 14) {
 					switch (saucerScore) {
@@ -338,46 +269,6 @@ public class Game {
 	}
 
 	
-	/**
-	 * Set the direction of the Invaders
-	 * When the direction is +/-2 (moving down and right/left) it will be changed to +/-1 when
-	 * the entire squadron has been redrawn
-	 * 
-	 * @param newDirection - -2 = moving down and left, -1 = left, 1 = right, 2 = moving down and right
-	 */
-	public static void setDirection(int newDirection) {
-		direction = newDirection;
-	}
-
-	/**
-	 * Sets the changeDirection flag
-	 * This tells the game that before going around do move all the invaders again it should
-	 * check to see if the direction is to be changed.
-	 */
-	public static void changeDirection() {
-		changeDirection = true;
-	}
-
-	public static boolean getChangeDirection() {
-		return changeDirection;
-	}
-	/**
-	 * This returns the status of the moveDown flag. This is set at the end of a full movement update
-	 * if the changeDirection flag is set.
-	 * @return
-	 */
-	public static boolean getMoveDown() {
-		return moveDown;
-	}
-	
-	/**
-	 * Get the direction of the invaders
-	 * @return -2 = moving down and left, -1 = left, 1 = right, 2 = moving down and right
-	 */
-	public static int getDirection() {
-		return direction;
-	}
-
 	/**
 	 * Get the value of player 1's score
 	 * @return player 1 score
@@ -416,21 +307,21 @@ public class Game {
 	 * Get the number of lives left for player 1
 	 * @return player 1 lives left
 	 */
-	public static int getLives1() {
+	public static int getLives1 () {
 		return lives1;
 	}
 	/**
 	 * Get the number of lives left for player 2
 	 * @return player 2 lives left
 	 */
-	public static int getLives2() {
+	public static int getLives2 () {
 		return lives2;
 	}
 	
 	/**
 	 * Update the score display
 	 */
-	public static void showScores() {
+	public static void showScores () {
 		Graphics g = Window.getPlayAreaGraphics();
 		g.setColor(Color.BLACK);
 		g.fillRect(48, 48, 64, 16);
@@ -444,7 +335,7 @@ public class Game {
 	/**
 	 * Update the credits display
 	 */
-	public static void showCredits() {
+	public static void showCredits () {
 		Graphics g = Window.getPlayAreaGraphics();
 		g.setColor(Color.BLACK);
 		g.fillRect(392, 480, 32, 16);
@@ -455,7 +346,7 @@ public class Game {
 	 * Update the lives display
 	 * @param number of lives to display
 	 */
-	public static void showLives(int lives) {
+	public static void showLives (int lives) {
 		Graphics g = Window.getPlayAreaGraphics();
 		g.setColor(Color.BLACK);
 		g.fillRect(16, 480, 374, 16);
@@ -465,6 +356,22 @@ public class Game {
 			for (int i = 1; i < lives; ++i) {
 				g.drawImage(base.getSubimage(0, 0, 16, 8), i * 48, 480, 32, 16, null);
 			}
+		}
+	}
+
+	public static int getBaseX () {
+		return baseX;
+	}
+	
+	public static void setBaseExplode () {
+		baseExplode = 1;
+	}
+	
+	public static boolean isBaseInactive () {
+		if (baseInactive > 0) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 	
