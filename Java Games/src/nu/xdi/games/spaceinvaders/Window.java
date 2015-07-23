@@ -143,11 +143,13 @@ public class Window extends JComponent implements ActionListener {
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, width, height);
 		
-		// Draw the shields
-		g.drawImage(Game.shield, 64, 382, 48, 32, null);
-		g.drawImage(Game.shield, 154, 382, 48, 32, null);
-		g.drawImage(Game.shield, 244, 382, 48, 32, null);
-		g.drawImage(Game.shield, 334, 382, 48, 32, null);
+		// Only draw the shields if the invaders are in wave 0 to 4
+		if (Game.currentWave < 5) {
+			g.drawImage(Game.shield, 64, 382, 48, 32, null);
+			g.drawImage(Game.shield, 154, 382, 48, 32, null);
+			g.drawImage(Game.shield, 244, 382, 48, 32, null);
+			g.drawImage(Game.shield, 334, 382, 48, 32, null);
+		}
 		
 		// Draw the line at the bottom
 		g.setColor(Color.GREEN);
@@ -171,7 +173,7 @@ public class Window extends JComponent implements ActionListener {
 		Game.showScores();
 		
 		g.setColor(Color.WHITE);
-		Text.print(g, 192, 128, "PLAy");
+		Text.print(g, 192, 128, "PLAY");
 		Text.print(g, 112, 176, "SPACE  INVADERS");
 		Text.print(g, 64, 240, "*SCORE ADVANCE TABLE*");
 		g.drawImage(Game.saucer, 126, 272, 32, 16, null);
@@ -184,9 +186,38 @@ public class Window extends JComponent implements ActionListener {
 		g.drawImage(Game.spriteSheet.getSubimage(0, 0, 16, 8), 126, 368, 32, 16, null);
 		Text.print(g, 158, 368, "=10 POINTS");
 		
+		Text.print(g, 32, 416, "PRESS  5 TO INSERT COIN");
+		Text.print(g, 144, 432, "1 TO PLAY");
+		Text.print(g, 144, 448, "ESC TO QUIT");
+		
 		Text.print(g, 280, 480, "CREDIT", Color.GRAY);
 		Game.showCredits();
 		
+	}
+	
+	public static void gameOverScreen () {
+		
+		Graphics g = playArea.getGraphics();
+
+		g.setColor(Color.WHITE);
+		InvadersApp.pause(30);
+		Text.print(g, 144, 128, "G");
+		InvadersApp.pause(30);
+		Text.print(g, 160, 128, "A");
+		InvadersApp.pause(30);
+		Text.print(g, 176, 128, "M");
+		InvadersApp.pause(30);
+		Text.print(g, 192, 128, "E");
+		InvadersApp.pause(30);
+		
+		Text.print(g, 224, 128, "O");
+		InvadersApp.pause(30);
+		Text.print(g, 240, 128, "V");
+		InvadersApp.pause(30);
+		Text.print(g, 256, 128, "E");
+		InvadersApp.pause(30);
+		Text.print(g, 272, 128, "R");
+
 	}
 	
 }
