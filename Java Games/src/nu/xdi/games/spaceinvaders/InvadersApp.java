@@ -35,34 +35,42 @@ public class InvadersApp {
 		Text.loadFont();
 		loadSprites();
 
-		Window.attractModeScreen1();
 
 		while (true) {
+			
+			Window.attractModeScreen1();
+
 			while (true) {
 				pause(1);
 				if (Controls.getCoin()) {
+					Sound.coindDrop.play();
 					while (Controls.getCoin()) {
 						pause(1);
 					}
-					System.out.println("Credit added");
 					Game.addCredit();
 					Game.showCredits();
-				} else if (Controls.getP1Start()) {
+				} else if (Controls.getQuit()) {
+					break;
+				} else if (Controls.getP1Start() && Game.getCredits() >= 1) {
+
+					Game.StartGame();
+					
+					while (Game.getLives1() > 0) {
+						pause(5);		// poll every 5 frames
+					}
+
+					Window.gameOverScreen();
+					pause(120);
+
 					break;
 				}
 			}
-			System.out.println("Attract mode ended");
-		
-			Game.StartGame();
-
-			while (true) {
-				pause(20);		// wait 1/3 seconds
-				if (Game.getLives1() == 0) break;
 			
-			}
+			if (Controls.getQuit()) break;
+			
 		}
-		
-		//System.exit(0);
+
+		System.exit(0);
 	}
 	
 	/**
