@@ -25,8 +25,8 @@ public class Invader {
 	private static int currentRow = 4;
 	private static int currentCol = 0;
 	static Invader[] invaders = new Invader[55];
-	private static int invaderStep = 0;					// Resets at 60
-	private static int stepSound = 0;					// loops around from 0-3
+	private static int invaderStep = 53;
+	private static int stepSound = 1;					// loops around from 0-3
 	
 	
 	static BufferedImage sprites = null;
@@ -68,7 +68,7 @@ public class Invader {
 		moveDown = false;
 		currentRow = 4;
 		currentCol = 0;
-		invaderStep = 0;
+		invaderStep = 53;
 		stepSound = 1;
 		freeze = 0;
 		
@@ -140,22 +140,38 @@ public class Invader {
 	 */
 	public static boolean marchInvaders(Graphics g) {
 		int i;
-		int activeCount = 0;
-		
-		while (true) {
-			if (++invaderStep == 72) {
-				invaderStep = 0;
-				Sound.steps[stepSound].stop();
-				if (++stepSound == 4) stepSound = 0;
-				Sound.steps[stepSound].play();
-			}
+		int invaderCount = invadersLeft(invaders);
+
+		if (invaderStep-- <= 0) {
+			if (invaderCount > 49) invaderStep = 53;
+			else if (invaderCount > 42) invaderStep = 46;
+			else if (invaderCount > 35) invaderStep = 39;
+			else if (invaderCount > 28) invaderStep = 34;
+			else if (invaderCount > 22) invaderStep = 28;
+			else if (invaderCount > 17) invaderStep = 24;
+			else if (invaderCount > 14) invaderStep = 21;
+			else if (invaderCount > 11) invaderStep = 18;
+			else if (invaderCount > 9) invaderStep = 16;
+			else if (invaderCount > 7) invaderStep = 13;
+			else if (invaderCount > 6) invaderStep = 11;
+			else if (invaderCount > 5) invaderStep = 9;
+			else if (invaderCount > 4) invaderStep = 8;
+			else if (invaderCount > 3) invaderStep = 7;
+			else if (invaderCount > 2) invaderStep = 6;
+			else if (invaderCount > 1) invaderStep = 5;
+			else if (invaderCount > 0) invaderStep = 4;
+			else if (invaderCount == 0) invaderStep = 53;
 			
-			Invader currentInv = invaders[currentRow * 11 + currentCol];
-			if (currentInv.getFreeze() > 0) {
+			Sound.steps[stepSound].stop();
+			if (++stepSound == 4) stepSound = 0;
+			Sound.steps[stepSound].play();
+		}
+		
+		Invader currentInv;
+		while (true) {
+			
+			if (Invader.getFreeze() > 0) {
 				for (Invader inv : invaders) {
-					if (inv.getType() > 0 && inv.getExplode() == 0) {
-						activeCount++;
-					}
 					if (inv.getExplode() > 0) {
 						inv.redraw(g);
 					}
@@ -163,9 +179,11 @@ public class Invader {
 				break;
 			}
 
-			if (invadersLeft(invaders) == 0) return false;
+			if (invaderCount == 0) return false;
 
-			// If the current invader is active, move it and give it chance to shoot
+			currentInv = invaders[currentRow * 11 + currentCol];
+
+			// If the current invader is active, move it and give it chance to shoot (especially if directly overhead)
 			if (currentInv.getType() > 0) {
 				currentInv.moveAcross();
 				if (moveDown) {
@@ -174,8 +192,10 @@ public class Invader {
 				}
 				currentInv.redraw(g);
 
-				// Give the current invader a chance to fire
-				if (!Game.isBaseInactive() && new Random().nextInt(100) > 90) {
+				// Fire?
+				
+				if (!Game.isBaseInactive() && new Random().nextInt(100) > (Math.abs(currentInv.getX() - Game.getBaseX()) > 20 ? 90 : 50)) {
+					System.out.println("Distance from base: " + Math.abs(currentInv.getX() - Game.getBaseX()));
 					// Scan down to make sure it isn't above another invader
 					for (i = currentRow; i <= 4; ++i)  {
 						if (i == 4) break;
