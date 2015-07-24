@@ -155,8 +155,9 @@ public class Window extends JComponent implements ActionListener {
 		g.setColor(Color.GREEN);
 		g.fillRect(0, 478, 446, 2);
 
+		g.setColor(Color.GRAY);
 		Text.print(g, 16, 16, "SCORE<1> HI-SCORE SCORE<2>");
-		Text.print(g, 280, 480, "CREDIT", Color.GRAY);
+		Text.print(g, 280, 480, "CREDIT");
 		
 	}
 
@@ -173,18 +174,20 @@ public class Window extends JComponent implements ActionListener {
 		Game.showScores();
 		
 		g.setColor(Color.WHITE);
-		Text.print(g, 192, 128, "PLAY");
-		Text.print(g, 112, 176, "SPACE  INVADERS");
-		Text.print(g, 64, 240, "*SCORE ADVANCE TABLE*");
-		g.drawImage(Game.saucer, 126, 272, 32, 16, null);
-		Text.print(g, 158, 272, "=? MYSTERY");
+		Text.print(g, 192, 96, "PLAY");
+		Text.print(g, 112, 144, "SPACE  INVADERS");
+		Text.print(g, 64, 208, "*SCORE ADVANCE TABLE*");
+		g.drawImage(Game.saucer, 126, 240, 32, 16, null);
+		Text.print(g, 158, 248, "=? MYSTERY");
 
-		g.drawImage(Game.spriteSheet.getSubimage(32, 0, 16, 8), 126, 304, 32, 16, null);
-		Text.print(g, 158, 304, "=30 POINTS");
-		g.drawImage(Game.spriteSheet.getSubimage(16, 0, 16, 8), 126, 336, 32, 16, null);
-		Text.print(g, 158, 336, "=20 POINTS");
-		g.drawImage(Game.spriteSheet.getSubimage(0, 0, 16, 8), 126, 368, 32, 16, null);
-		Text.print(g, 158, 368, "=10 POINTS");
+		g.drawImage(Game.spriteSheet.getSubimage(32, 0, 16, 8), 126, 272, 32, 16, null);
+		Text.print(g, 158, 272, "=30 POINTS");
+		g.drawImage(Game.spriteSheet.getSubimage(16, 0, 16, 8), 126, 304, 32, 16, null);
+		Text.print(g, 158, 304, "=20 POINTS");
+		g.drawImage(Game.spriteSheet.getSubimage(0, 0, 16, 8), 126, 336, 32, 16, null);
+		Text.print(g, 158, 336, "=10 POINTS");
+
+		Text.print(g, 0, 368, "EXTRA LIFE EVERY 1500 POINTS");
 		
 		Text.print(g, 32, 416, "PRESS  5 TO INSERT COIN");
 		Text.print(g, 144, 432, "1 TO PLAY");
@@ -199,7 +202,7 @@ public class Window extends JComponent implements ActionListener {
 		
 		Graphics g = playArea.getGraphics();
 
-		g.setColor(Color.WHITE);
+		g.setColor(Color.RED);
 		InvadersApp.pause(30);
 		Text.print(g, 144, 128, "G");
 		InvadersApp.pause(30);
