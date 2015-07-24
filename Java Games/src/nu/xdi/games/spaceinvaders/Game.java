@@ -52,6 +52,8 @@ public class Game {
 	private static int baseInactive = 0;
 	private static int waveEndTimer = 0;
 	static int currentWave = 0;
+	static int lastLifeAt = 0;
+
 	
 	/**
 	 * Start the game by resetting the score and initialising a new array of invaders
@@ -79,6 +81,7 @@ public class Game {
 		waveEndTimer = 0;
 		currentWave = 0;
 		gameRunning = true;
+		lastLifeAt = score1;
 		
 	}
 	
@@ -101,7 +104,7 @@ public class Game {
 	 * @param graphics context of drawable area
 	 */
 	public static void update(Graphics g) {
-		
+
 		if (gameRunning) {
 			
 			// Draw player base
@@ -184,6 +187,12 @@ public class Game {
 											case 5: score1 += 10;		// Low score
 										}
 										showScores();
+
+										if (score1 - lastLifeAt >= 1500) {
+											lives1++;
+											showLives(lives1);
+											lastLifeAt = score1;
+										}
 										shotExplode = 0;
 										break;
 									}
