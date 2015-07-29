@@ -24,15 +24,15 @@ public class Window extends JComponent implements ActionListener {
 	// Explicitly define a serialisation ID instead of overriding
 	// the warning.
 	private static final long serialVersionUID = 1L;
-	private String title;
+//	private String title;
 	private static int width, height;
 	private JFrame window;
 	private static BufferedImage playArea;
 	
 	public Window (String title, int width, int height) {
-		this.title = title;
-		this.width = width;
-		this.height = height;
+//		this.title = title;
+		Window.width = width;
+		Window.height = height;
 
 		window = new JFrame(title);
 		window.add(this);				// Add this JComponent to the JFrame, "window"
@@ -143,13 +143,11 @@ public class Window extends JComponent implements ActionListener {
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, width, height);
 		
-		// Only draw the shields if the invaders are in wave 0 to 4
-		if (Game.currentWave < 5) {
-			g.drawImage(Game.shield, 64, 382, 48, 32, null);
-			g.drawImage(Game.shield, 154, 382, 48, 32, null);
-			g.drawImage(Game.shield, 244, 382, 48, 32, null);
-			g.drawImage(Game.shield, 334, 382, 48, 32, null);
-		}
+		// Draw the shields
+		g.drawImage(Game.shield, 64, 384, 48, 32, null);
+		g.drawImage(Game.shield, 154, 384, 48, 32, null);
+		g.drawImage(Game.shield, 244, 384, 48, 32, null);
+		g.drawImage(Game.shield, 334, 384, 48, 32, null);
 		
 		// Draw the line at the bottom
 		g.setColor(Color.GREEN);
@@ -174,17 +172,17 @@ public class Window extends JComponent implements ActionListener {
 		Game.showScores();
 		
 		g.setColor(Color.WHITE);
-		Text.print(g, 192, 96, "PLAY");
-		Text.print(g, 112, 144, "SPACE  INVADERS");
+		Text.print(g, 192, 96, "PLAY", 5);
+		Text.print(g, 112, 144, "SPACE  INVADERS", 5);
 		Text.print(g, 64, 208, "*SCORE ADVANCE TABLE*");
-		g.drawImage(Game.saucer, 126, 240, 32, 16, null);
-		Text.print(g, 158, 248, "=? MYSTERY");
-
+		g.drawImage(Game.saucerSprite, 126, 240, 32, 16, null);
 		g.drawImage(Game.spriteSheet.getSubimage(32, 0, 16, 8), 126, 272, 32, 16, null);
-		Text.print(g, 158, 272, "=30 POINTS");
 		g.drawImage(Game.spriteSheet.getSubimage(16, 0, 16, 8), 126, 304, 32, 16, null);
-		Text.print(g, 158, 304, "=20 POINTS");
 		g.drawImage(Game.spriteSheet.getSubimage(0, 0, 16, 8), 126, 336, 32, 16, null);
+
+		Text.print(g, 158, 248, "=? MYSTERY");
+		Text.print(g, 158, 272, "=30 POINTS");
+		Text.print(g, 158, 304, "=20 POINTS");
 		Text.print(g, 158, 336, "=10 POINTS");
 
 		Text.print(g, 0, 368, "EXTRA LIFE EVERY 1500 POINTS");
@@ -203,23 +201,7 @@ public class Window extends JComponent implements ActionListener {
 		Graphics g = playArea.getGraphics();
 
 		g.setColor(Color.RED);
-		InvadersApp.pause(30);
-		Text.print(g, 144, 128, "G");
-		InvadersApp.pause(30);
-		Text.print(g, 160, 128, "A");
-		InvadersApp.pause(30);
-		Text.print(g, 176, 128, "M");
-		InvadersApp.pause(30);
-		Text.print(g, 192, 128, "E");
-		InvadersApp.pause(30);
-		
-		Text.print(g, 224, 128, "O");
-		InvadersApp.pause(30);
-		Text.print(g, 240, 128, "V");
-		InvadersApp.pause(30);
-		Text.print(g, 256, 128, "E");
-		InvadersApp.pause(30);
-		Text.print(g, 272, 128, "R");
+		Text.print(g, 144, 128, "GAME OVER", 10);
 
 	}
 	
