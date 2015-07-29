@@ -4,8 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-import nu.xdi.graphics.util.*;
-
 /**
  * @author Kevin Phair
  * @date 18 Jul 2015
@@ -22,7 +20,7 @@ public class Text {
 	 */
 	public static boolean loadFont() {
 		
-		fontSheet = new Images().loadImage("/nu/xdi/games/spaceinvaders/font.png");
+		fontSheet = new ImageRes().loadImage("resources/font.png");
 		if (fontSheet == null) {
 			System.out.println("Font not available!");
 			return false;
@@ -53,14 +51,15 @@ public class Text {
 	}
 	
 	/**
-	 * Print a string using the font in the font sheet
+	 * Print a string using the font in the font sheet with a delay between each character
 	 * 
 	 * @param graphics context for area to draw in
 	 * @param x
 	 * @param y
 	 * @param text to print
+	 * @param delay in frames between characters
 	 */
-	public static void print(Graphics g, int x, int y, String text) {
+	public static void print(Graphics g, int x, int y, String text, int delay) {
 		char c;
 		
 		for (int i = 0; i < text.length(); ++i) {
@@ -84,12 +83,32 @@ public class Text {
 				}
 				x += 16;
 			}
+			if (delay > 0) InvadersApp.pause(delay);
 		}
 	}
 	
+	/**
+	 * Print a string with specified colour
+	 * @param graphics context for area to draw in
+	 * @param x
+	 * @param y
+	 * @param text to print
+	 * @param colour of text
+	 */
 	public static void print(Graphics g, int x, int y, String text, Color c) {
 		g.setColor(c);
-		print(g, x, y, text);
+		print(g, x, y, text, 0);
+	}
+
+	/**
+	 * Print a string with current colour
+	 * @param graphics context for area to draw in
+	 * @param x
+	 * @param y
+	 * @param text to print
+	 */
+	public static void print(Graphics g, int x, int y, String text) {
+		print(g, x, y, text, 0);
 	}
 
 }
