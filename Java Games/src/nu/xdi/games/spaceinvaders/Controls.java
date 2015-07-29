@@ -2,8 +2,6 @@ package nu.xdi.games.spaceinvaders;
 
 import java.awt.event.KeyEvent;
 
-import javax.swing.JComboBox.KeySelectionManager;
-
 /**
  * @author Kevin Phair
  * @date 18 Jul 2015
