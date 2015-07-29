@@ -4,11 +4,6 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.util.Random;
-
-import org.omg.CORBA.FREE_MEM;
-
-import nu.xdi.graphics.util.Images;
 
 /**
  * Game function code
@@ -35,11 +30,10 @@ public class Game {
 	static BufferedImage missileExplosion;
 	static BufferedImage shield;
 	
-	static BufferedImage saucer;
+	static BufferedImage saucerSprite;
 	static BufferedImage saucerExplosion;
-	private static int saucerX;
 	private static int saucerTimer;
-	private static int saucerScore = 50;
+	private static int saucerScore = 100;			// Start at 7 so that #23 gets 300 for saucer
 	
 
 	static Missile missile;
@@ -53,7 +47,8 @@ public class Game {
 	private static int waveEndTimer = 0;
 	static int currentWave = 0;
 	static int lastLifeAt = 0;
-
+	private static Saucer saucer;
+	private static boolean invadersWin = false;
 	
 	/**
 	 * Start the game by resetting the score and initialising a new array of invaders
@@ -63,9 +58,9 @@ public class Game {
 		shotX = -1;
 		baseX = 36;
 		shotExplode = 0;
-		playerShotCount = 0;
+		playerShotCount = 8;
 		saucerScore = 150;
-		saucerX = -1;
+		saucerTimer = 0;
 		
 		lives1 = 3;
 		lives2 = 3;
@@ -80,6 +75,7 @@ public class Game {
 		baseInactive = 120;
 		waveEndTimer = 0;
 		currentWave = 0;
+		invadersWin = false;
 		gameRunning = true;
 		lastLifeAt = score1;
 		
@@ -135,9 +131,11 @@ public class Game {
 						baseX = 36;
 						lives1--;
 						showLives(lives1);
-						if (lives1 == 0) {
+						if (lives1 == 0 || invadersWin) {
 							if (score1 > hiScore) hiScore = score1;
 							showScores();
+							Sound.saucer.stop();
+							if (invadersWin) lives1 = 0;
 							gameRunning = false;
 						}
 					}
@@ -149,24 +147,28 @@ public class Game {
 			// If player's shot is active (x is positive) then redraw it
 			if (shotX >= 0) {
 				if (shotExplode > 0) {
-					g.drawImage(shotExplosion, shotX, shotY + 4, 16, 16, null);
-					if (--shotExplode == 0) {
+					if (shotExplode == 8) {
+						g.drawImage(shotExplosion, shotX - 6, shotY + 4, 16, 16, null);
 						Sound.baseFire.stop();
+					}
+					if (--shotExplode == 0) {
+						g.drawImage(shotExplosion, shotX - 6, shotY + 4, 16, 16, null);
 						g.setXORMode(Color.BLACK);
-						g.drawImage(shotExplosion, shotX, shotY + 4, 16, 16, null);
+						g.drawImage(shotExplosion, shotX - 6, shotY + 4, 16, 16, null);
 						g.setPaintMode();
 						shotX = -2;					// Set to -2. See movement() further down
 					}
 				} else {
 					// Erase old shot
 					g.setColor(Color.BLACK);
-					g.clearRect(shotX + 6, shotY, 2, 8);
+					g.clearRect(shotX, shotY, 2, 8);
 					shotY -= 8;
 					
 					// Test if it's reached the top of the screen or can be redrawn in new position
 					if (shotY <= 64) {
+						shotY = 64;
 						shotExplode = 8;
-					} else if (checkCollision(shotX + 6, shotY)) {
+					} else if (checkCollision(shotX, shotY)) {
 						// Shot will collide with something
 						shotY -= 8;
 						shotExplode = 8;
@@ -175,7 +177,7 @@ public class Game {
 						for (Invader inv : Invader.invaders ) {
 							if (inv.getType() > 0) {
 								// is it within the hitbox?
-								if (shotX >= inv.getX() - 2 && shotX <= inv.getX() + 24) {
+								if (shotX >= inv.getX() && shotX <= inv.getX() + 32) {
 									if (shotY >= inv.getY() && shotY <= inv.getY() + 14) {
 										inv.setExplode();
 										shotX = -2;
@@ -194,18 +196,38 @@ public class Game {
 											lastLifeAt = score1;
 										}
 										shotExplode = 0;
+										Sound.baseFire.stop();
 										break;
 									}
+								}
+							}
+						}
+						// No hit on invader, check if it hit the saucer
+						if (shotX >= 0 && saucer != null && saucer.isAlive()) {
+							if (shotY <= saucer.getY() + 16) {
+								if (shotX - 6 >= saucer.getY()) {
+									saucer.explode();
+									shotExplode = 0;
+									shotX = -2;
+									score1 += saucer.getScore();
 								}
 							}
 						}
 					} else {
 						// otherwise just draw it in new position
 						g.setColor(Color.WHITE);
-						g.fillRect(shotX + 6, shotY, 2, 8);
+						g.fillRect(shotX, shotY, 2, 8);
 					}
 				}
+			} // End of shot handler
+			
+			/*
+			 * Saucer handler
+			 */
+			if (saucer != null && saucer.isActive()) {
+				saucer.update();
 			}
+			
 			
 			/*
 			 * Invader missile handler
@@ -223,9 +245,7 @@ public class Game {
 				if (Invader.marchInvaders(g) == false && waveEndTimer == 0) {
 					waveEndTimer = 60;
 				} else if (waveEndTimer > 0) {
-					System.out.println(waveEndTimer);
 					if (--waveEndTimer == 0) {
-						
 						missile = new Missile(spriteSheet.getSubimage(72, 0, 9, 32));
 						new Invader();
 						Invader.setDirection(1);
@@ -233,12 +253,22 @@ public class Game {
 						showScores();
 						showCredits();
 						showLives(lives1);
-						saucerScore = 50;
-						playerShotCount = 0;
+						saucerScore = 100;
+						playerShotCount = 7;
 						currentWave++;
-						if (currentWave == 7) currentWave = 0;		// Wave 6 is as low as the invaders can be
+						if (currentWave == 14) currentWave = 11;		// Wave 6 is as low as the invaders can be
 						System.out.println("New wave " + currentWave);
 					}
+				}
+			}
+			
+			/*
+			 * See if the saucer needs to be launched
+			 */
+			if (saucerTimer++ == 60 * 25) {
+				saucerTimer = 0;
+				if (saucer == null || !saucer.isActive()) {
+					saucer = new Saucer(saucerScore);
 				}
 			}
 		}
@@ -262,16 +292,15 @@ public class Game {
 				shotX = -1;
 			}
 			if (Controls.getFire() && shotX == -1 && Invader.getFreeze() == 0) {
-				shotX = baseX + 10	;
+				shotX = baseX + 16	;
 				shotY = 432;
 				Sound.baseFire.play();
 				playerShotCount++;
-				if (playerShotCount == 14) {
-					switch (saucerScore) {
-						case 50: saucerScore = 100; break;
-						
-					}
-					
+				switch (playerShotCount % 15) {
+					case 0: saucerScore = 50; break;
+					case 6: saucerScore = 100; break;
+					case 12: saucerScore = 150; break;
+					case 14: saucerScore = 300; break;
 				}
 			}
 		}
@@ -311,6 +340,16 @@ public class Game {
 	 */
 	public static void addCredit() {
 		credits++;
+	}
+	/**
+	 * Use up a number of credits
+	 */
+	public static void useCredit(int num) {
+		if (num >= getCredits()) {
+			credits = 0;
+		} else {
+			credits--;
+		}
 	}
 	/**
 	 * Get the number of lives left for player 1
@@ -382,6 +421,11 @@ public class Game {
 		} else {
 			return false;
 		}
+	}
+	
+	public static void invadersWin() {
+		invadersWin = true;
+		setBaseExplode();
 	}
 	
 }
