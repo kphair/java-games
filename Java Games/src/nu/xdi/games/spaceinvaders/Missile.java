@@ -19,7 +19,7 @@ public class Missile {
 	private static int[] y = { 0, 0, 0 };
 	private static int[] active = { 0, 0, 0 };
 	private static int[] explode = { 0, 0, 0 };
-	private static BufferedImage[] bg = { null, null, null };
+//	private static BufferedImage[] bg = { null, null, null };
 	private static int num = 0;
 	private static int frame = 0;
 	
@@ -68,7 +68,6 @@ public class Missile {
 			Missile.y[num] = y;
 			active[num] = 1;
 			explode[num] = 0;
-//			System.out.println("Missile away!");
 			return true;
 		} else {
 			return false;
@@ -105,7 +104,6 @@ public class Missile {
 
 	public void update() {
 
-		boolean collision = false;
 		Graphics g = Window.getPlayAreaGraphics();
 		// Get the image for this particular missile
 		BufferedImage mImg = spriteSheet.getSubimage(num * 3, frame * 8, 3, 8);
@@ -121,8 +119,7 @@ public class Missile {
 				g.setXORMode(Color.BLACK);
 				g.drawImage(mImg, x, y, 6, 16, null);
 				g.setPaintMode();
-				if (y > 450) {
-//					System.out.println("Hit bottom");
+				if (y >= 454) {
 					explode[num] = 8;
 				} else {
 
@@ -132,18 +129,14 @@ public class Missile {
 						Missile.y[num] = y;
 						mImg = spriteSheet.getSubimage(num * 3, ((frame + 1) % 4) * 8, 3, 8);
 						g.drawImage(mImg, x, y, 6, 16, null);
-//						System.out.println("Missile hit something");
 						explode[num] = 8;
 						// Did missile hit our base?
-						if (Missile.y[num] >= 424 && Missile.y[num] < 448) {
+						if (Missile.y[num] >= 420 && Missile.y[num] < 448) {
 							if (Missile.x[num] > Game.getBaseX() + 2 && Missile.x[num] < Game.getBaseX() + 42) {
-								System.out.println("Enemy hit base!");
-								System.out.println("Missile X: " + Missile.x[num] + " Base X: " + Game.getBaseX());
 								Game.setBaseExplode();
 							}
 						}
 					} else {
-						
 						y += 8;
 						Missile.y[num] = y;
 						mImg = spriteSheet.getSubimage(num * 3, ((frame + 1) % 4) * 8, 3, 8);
@@ -151,22 +144,20 @@ public class Missile {
 					}
 				}
 			} else if (explode[num] == 8) {
-//				System.out.println("Show explosion");
 				g.drawImage(mImg, x, y, 6, 16, null);
 				g.setXORMode(Color.BLACK);
 				g.drawImage(mImg, x, y, 6, 16, null);
 				g.setPaintMode();
-				g.drawImage(Game.missileExplosion, x - 4, y + 8, 16, 16, null);
+				y += 4;
+				Missile.y[num] = y;
+				g.drawImage(Game.missileExplosion, x - 6, y , 16, 16, null);
 				explode[num]--;
-			} else if (explode[num] > 0) {
-				if (--explode[num] == 0) {
-//					System.out.println("Erasing and making inactive");
-					setInactive();
-					g.drawImage(Game.missileExplosion, x - 4, y + 8, 16, 16, null);
-					g.setXORMode(Color.BLACK);
-					g.drawImage(Game.missileExplosion, x - 4, y + 8, 16, 16, null);
-					g.setPaintMode();
-				};
+			} else if (explode[num] > 0 && --explode[num] == 0) {
+				setInactive();
+				g.drawImage(Game.missileExplosion, x - 6, y , 16, 16, null);
+				g.setXORMode(Color.BLACK);
+				g.drawImage(Game.missileExplosion, x - 6, y , 16, 16, null);
+				g.setPaintMode();
 			}
 		}
 	}
