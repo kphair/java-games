@@ -35,6 +35,7 @@ public class Invader {
 	static BufferedImage medInv = null;
 	static BufferedImage lowInv = null;
 	private static int freeze;
+	private static boolean invadersWin = false;
 
 	/**
 	 * Constructor for a new Invader object with position and type
@@ -61,8 +62,6 @@ public class Invader {
 	 */
 	public Invader () {
 
-		BufferedImage image = null;
-
 		setDirection (1);
 		changeDirection = false;
 		moveDown = false;
@@ -71,8 +70,8 @@ public class Invader {
 		invaderStep = 53;
 		stepSound = 1;
 		freeze = 0;
+		invadersWin = false;
 		
-		System.out.println("Initialising new invaders array");
 		if (highInv == null) {
 			highInv = sprites.getSubimage(32, 0, 16, 16);
 			medInv = sprites.getSubimage(16, 0, 16, 16); 
@@ -81,11 +80,11 @@ public class Invader {
 
 		Invader[] a = invaders;
 		for (int j = 0; j < 11; ++j) {
-			a[j] = new Invader(40 + j * 32, Game.currentWave * 32 + 128, 1, highInv);
-			a[j + 11] = new Invader(40 + j * 32, Game.currentWave * 32 + 128 + 32, 2, medInv);
-			a[j + 22] = new Invader(40 + j * 32, Game.currentWave * 32 + 128 + 64, 3, medInv);
-			a[j + 33] = new Invader(40 + j * 32, Game.currentWave * 32 + 128 + 96, 4, lowInv);
-			a[j + 44] = new Invader(40 + j * 32, Game.currentWave * 32 + 128 + 128, 5, lowInv);
+			a[j] = new Invader(40 + j * 32, Game.currentWave * 16 + 144, 1, highInv);
+			a[j + 11] = new Invader(40 + j * 32, Game.currentWave * 16 + 144 + 32, 2, medInv);
+			a[j + 22] = new Invader(40 + j * 32, Game.currentWave * 16 + 144 + 64, 3, medInv);
+			a[j + 33] = new Invader(40 + j * 32, Game.currentWave * 16 + 144 + 96, 4, lowInv);
+			a[j + 44] = new Invader(40 + j * 32, Game.currentWave * 16 + 144 + 128, 5, lowInv);
 		}
 		
 	}
@@ -102,7 +101,6 @@ public class Invader {
 		this.type = type;
 		this.animFrame = 0;
 		this.explode = 0;
-		this.freeze = 0;
 	}
 	
 	/**
@@ -185,17 +183,20 @@ public class Invader {
 
 			// If the current invader is active, move it and give it chance to shoot (especially if directly overhead)
 			if (currentInv.getType() > 0) {
-				currentInv.moveAcross();
+				currentInv.moveAcross(invaderCount);
 				if (moveDown) {
 					currentInv.undraw(g);
 					currentInv.moveDown();
+					if (currentInv.getY() >= 432) {
+						currentInv.setType(1);
+						invadersWin = true;
+					}
 				}
 				currentInv.redraw(g);
 
 				// Fire?
 				
 				if (!Game.isBaseInactive() && new Random().nextInt(100) > (Math.abs(currentInv.getX() - Game.getBaseX()) > 20 ? 90 : 50)) {
-					System.out.println("Distance from base: " + Math.abs(currentInv.getX() - Game.getBaseX()));
 					// Scan down to make sure it isn't above another invader
 					for (i = currentRow; i <= 4; ++i)  {
 						if (i == 4) break;
@@ -205,7 +206,7 @@ public class Invader {
 					}
 					// if i == 4 then all clear. Use the next free missile slot if one available
 					if (i == 4) {
-						Game.missile.dropMissile(currentInv.getX() + 14, currentInv.getY() + 32);
+						Game.missile.dropMissile(currentInv.getX() + 14, currentInv.getY() + 28);
 					}
 				}
 			}
@@ -214,6 +215,7 @@ public class Invader {
 			if (currentCol > 10) {
 				currentCol = 0;
 				currentRow--;
+				if (invadersWin) Game.invadersWin();
 				/*
 				 * If all the invaders are done check to see if the changeDirection flag is set
 				 */
@@ -318,12 +320,18 @@ public class Invader {
 	 * 
 	 * The array starts from the top left invader and goes left to right then down
 	 */
-	public void moveAcross() {
+	public void moveAcross(int count) {
 	
-		if (type > 0 && ((x < 22 && getDirection() < 0) || (x > 392 && getDirection() > 0))) {
+		int dir = getDirection();
+		
+		if (type > 0 && ((x <= 12 && dir < 0) || (x >= 398 && dir > 0))) {
 			changeDirection();
 		}
-		x += Math.signum(getDirection()) * 4;
+		x += Math.signum(dir) * 4;
+		// The last invader always moves faster when going left
+		if (dir < 0 && count == 1) {
+			x -= 2;
+		}
 		animFrame = (++animFrame % 2);
 	}
 	
@@ -379,6 +387,11 @@ public class Invader {
 	
 	public static int getFreeze() {
 		return freeze;
+	}
+	
+	public void setType(int type) {
+		this.type = type;
+		if (type == 1) this.image = highInv;
 	}
 
 }
