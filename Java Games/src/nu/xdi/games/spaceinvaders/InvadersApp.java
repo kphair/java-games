@@ -1,7 +1,5 @@
 package nu.xdi.games.spaceinvaders;
 
-import nu.xdi.graphics.util.Images;
-
 /**
  * Space Invaders game in Java
  * 
@@ -28,13 +26,11 @@ public class InvadersApp {
 
 	public static void main(String[] args ) {
 		
-		int i = 0;
-		
 		new Window("Space Invaders", 452,540);
 
 		Text.loadFont();
-		loadSprites();
-
+		ImageRes.loadSprites();
+		new Invader();
 
 		while (true) {
 			
@@ -53,6 +49,7 @@ public class InvadersApp {
 					break;
 				} else if (Controls.getP1Start() && Game.getCredits() >= 1) {
 
+					Game.useCredit(1);
 					Game.StartGame();
 					
 					while (Game.getLives1() > 0) {
@@ -84,28 +81,5 @@ public class InvadersApp {
 			
 		}
 	}
-
-	/**
-	 * Load the sprite sheet and extract the sprites into their separate BuffereImage objects
-	 */
-	private static void loadSprites() {
-
-		Game.spriteSheet = new Images().loadImage("/nu/xdi/games/spaceinvaders/SpaceInvadersSpriteSheet.png");
-		if (Game.spriteSheet == null) {
-			System.out.println("Sprite Sheet not available!");
-			return;
-		}
-		Game.base = Game.spriteSheet.getSubimage(0, 24, 48, 8);
-		Game.shotExplosion = Game.spriteSheet.getSubimage(32, 16, 8, 8);
-		Game.shield = Game.spriteSheet.getSubimage(48, 0, 24, 16);
-		Game.cheekySprite = Game.spriteSheet.getSubimage(16, 16, 32, 8);
-		Invader.sprites = Game.spriteSheet.getSubimage(0, 0, 48, 24);
-		Invader.explosion = Game.spriteSheet.getSubimage(0, 16, 16, 8);
-		Game.missileExplosion = Game.spriteSheet.getSubimage(48, 24, 8, 8);
-		Game.saucerExplosion = Game.spriteSheet.getSubimage(48, 16, 24, 8);
-		Game.saucer = Game.spriteSheet.getSubimage(56, 24, 16, 8);
-		Game.missile = new Missile(Game.spriteSheet.getSubimage(72, 0, 9, 32));
-		new Invader();
-		
-	}
+	
 }
