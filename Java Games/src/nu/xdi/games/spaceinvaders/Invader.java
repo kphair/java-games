@@ -281,15 +281,6 @@ public class Invader {
 		return changeDirection;
 	}
 	/**
-	 * This returns the status of the moveDown flag. This is set at the end of a full movement update
-	 * if the changeDirection flag is set.
-	 * @return
-	 */
-	public static boolean getMoveDown() {
-		return moveDown;
-	}
-	
-	/**
 	 * Get the direction of the invaders
 	 * @return -2 = moving down and left, -1 = left, 1 = right, 2 = moving down and right
 	 */
@@ -297,6 +288,18 @@ public class Invader {
 		return direction;
 	}
 
+	/**
+	 * This returns the status of the moveDown flag. This is set at the end of a full movement update
+	 * if the changeDirection flag is set.
+	 * @return
+	 */
+	public static boolean getMoveDown() {
+		return moveDown;
+	}
+	public void moveDown() {
+		y += 16;
+	}
+	
 	
 	/**
 	 * Clear the position where the invader is before it moves down one line
@@ -333,10 +336,6 @@ public class Invader {
 			x -= 2;
 		}
 		animFrame = (++animFrame % 2);
-	}
-	
-	public void moveDown() {
-		y += 16;
 	}
 	
 	/**
